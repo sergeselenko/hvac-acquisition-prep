@@ -1,0 +1,921 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>HVAC Acquisition Prep</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #e8edf1;
+        --surface: #ffffff;
+        --surface2: #f2f5f7;
+        --text: #122a3f;
+        --dim: #54687c;
+        --border: #d3dde6;
+        --accent: #d96c27;
+        --accent-ink: #b9551b;
+        --green: #1b7a4d;
+        --red: #b3372c;
+        --amber: #b97a12;
+        --navy: #122a3f;
+        --navy-soft: #1b3a54;
+        --shadow: 0 1px 3px rgba(18,42,63,.08), 0 8px 24px rgba(18,42,63,.06);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0c1824;
+          --surface: #162636;
+          --surface2: #1b2f42;
+          --text: #eef3f7;
+          --dim: #9db0c0;
+          --border: #2a3f52;
+          --accent: #f0833a;
+          --accent-ink: #f0833a;
+          --green: #3cb179;
+          --red: #e07a6e;
+          --amber: #e0a83e;
+          --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        }
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+      }
+      .display { font-family: "Archivo", system-ui, sans-serif; }
+      button { font-family: inherit; cursor: pointer; }
+      input, select { font-family: inherit; font-size: 16px; }
+      :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+      main { max-width: 1024px; margin: 0 auto; padding: 16px 16px 96px; }
+
+      /* ---------- Hero ---------- */
+      .hero {
+        background: var(--navy);
+        color: #fff;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+      }
+      .hero-body { padding: 24px 20px 20px; }
+      @media (min-width: 640px) { .hero-body { padding: 30px 28px 24px; } }
+      .hero-kicker {
+        margin: 0;
+        font-size: 12px; font-weight: 800;
+        letter-spacing: .18em; text-transform: uppercase;
+        color: #f2a56b;
+      }
+      .hero h1 {
+        margin: 10px 0 0;
+        font-size: 30px; line-height: 1.12; font-weight: 900;
+        letter-spacing: -0.01em;
+      }
+      @media (min-width: 640px) { .hero h1 { font-size: 38px; } }
+      .hero-sub { margin: 10px 0 0; max-width: 640px; font-size: 14.5px; line-height: 1.6; color: #c3d2e0; }
+      .hero-grid { display: grid; gap: 12px; margin-top: 22px; }
+      @media (min-width: 760px) { .hero-grid { grid-template-columns: 1fr 1fr 1fr; } }
+      .hero-card { background: rgba(255,255,255,.09); border-radius: 16px; padding: 16px; }
+      .hero-card.accent { background: var(--accent); }
+      .hero-card-label { margin: 0; font-size: 11.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #b9c9d9; }
+      .hero-card.accent .hero-card-label { color: #ffe3cf; }
+      .hero-big { margin: 6px 0 0; font-size: 40px; font-weight: 900; line-height: 1; }
+      .hero-big small { font-size: 17px; color: #b9c9d9; font-weight: 700; }
+      .hero-val { margin: 8px 0 0; font-size: 24px; font-weight: 900; line-height: 1.15; }
+      @media (min-width: 640px) { .hero-val { font-size: 27px; } }
+      .hero-note { margin: 8px 0 0; font-size: 12.5px; line-height: 1.55; color: #b9c9d9; }
+      .meter { margin-top: 10px; height: 8px; border-radius: 99px; background: rgba(255,255,255,.22); overflow: hidden; }
+      .meter > div { height: 100%; border-radius: 99px; background: var(--accent); transition: width .45s ease; }
+      .hero-next { margin: 10px 0 0; padding: 0; list-style: none; font-size: 14px; font-weight: 600; line-height: 1.45; }
+      .hero-next li { margin-top: 6px; padding-left: 16px; position: relative; }
+      .hero-next li::before { content: "•"; position: absolute; left: 2px; }
+      .hero-cta {
+        margin-top: 14px; border: 0; border-radius: 10px;
+        background: #fff; color: var(--navy);
+        padding: 9px 14px; font-size: 13px; font-weight: 800;
+      }
+      .tabs {
+        display: flex; flex-wrap: wrap; gap: 4px;
+        background: rgba(0,0,0,.22); padding: 8px 10px;
+      }
+      .tab-btn {
+        border: 0; border-radius: 99px; padding: 8px 14px;
+        font-size: 14px; font-weight: 700; color: #dbe6f0; background: transparent;
+        white-space: nowrap;
+      }
+      .tab-btn[aria-current="page"] { background: #fff; color: var(--navy); }
+
+      /* ---------- Panels ---------- */
+      .panel {
+        background: var(--surface); border-radius: 24px;
+        padding: 20px; margin-top: 24px; box-shadow: var(--shadow);
+      }
+      @media (min-width: 640px) { .panel { padding: 26px; } }
+      .panel h2 { margin: 0; font-size: 21px; font-weight: 800; line-height: 1.25; }
+      .panel h3.sub { margin: 0 0 4px; font-size: 13px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+      .lede { margin: 6px 0 0; font-size: 14.5px; color: var(--dim); line-height: 1.6; }
+      .tryit {
+        margin-top: 16px; border: 1.5px dashed var(--accent); border-radius: 14px;
+        padding: 12px 14px; font-size: 14px; line-height: 1.55;
+        background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+      }
+      .tryit strong { color: var(--accent-ink); }
+
+      /* ---------- Form ---------- */
+      .form-grid { display: grid; gap: 16px; margin-top: 18px; }
+      @media (min-width: 640px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+      .field { display: block; }
+      .field-label { display: block; font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+      .input-wrap {
+        margin-top: 5px; display: flex; align-items: center; gap: 4px;
+        border: 1px solid var(--border); border-radius: 12px; padding: 0 12px;
+        background: var(--surface);
+      }
+      .input-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+      .input-wrap .affix { font-size: 14px; color: var(--dim); }
+      .input-wrap input { width: 100%; border: 0; background: transparent; color: var(--text); padding: 11px 0; outline: none; min-width: 0; }
+      .plain-input {
+        margin-top: 5px; width: 100%; border: 1px solid var(--border); border-radius: 12px;
+        padding: 11px 12px; background: var(--surface); color: var(--text); outline: none;
+      }
+      .plain-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+      .field-hint { display: block; margin-top: 5px; font-size: 12.5px; color: var(--dim); line-height: 1.45; }
+      .bool-grid { display: grid; gap: 12px; margin-top: 16px; }
+      @media (min-width: 760px) { .bool-grid { grid-template-columns: 1fr 1fr 1fr; } }
+      .bool-btn {
+        text-align: left; border: 1px solid var(--border); border-radius: 14px;
+        padding: 13px 14px; background: var(--surface); color: var(--text); width: 100%;
+      }
+      .bool-btn .row { display: flex; justify-content: space-between; align-items: center; font-size: 14.5px; font-weight: 700; gap: 8px; }
+      .bool-btn .hint { display: block; margin-top: 4px; font-size: 12.5px; color: var(--dim); line-height: 1.45; font-weight: 400; }
+      .bool-btn.on { border-color: var(--green); background: color-mix(in srgb, var(--green) 9%, var(--surface)); }
+      .bool-btn .state { font-size: 13px; font-weight: 800; white-space: nowrap; }
+      .bool-btn.on .state { color: var(--green); }
+      .session-note { margin-top: 16px; font-size: 13px; color: var(--dim); line-height: 1.55; }
+
+      /* ---------- Pillars ---------- */
+      .pillar-grid { display: grid; gap: 12px; margin-top: 18px; }
+      @media (min-width: 640px) { .pillar-grid { grid-template-columns: 1fr 1fr; } }
+      @media (min-width: 960px) { .pillar-grid { grid-template-columns: 1fr 1fr 1fr; } }
+      .pillar { border: 1px solid var(--border); background: var(--surface2); border-radius: 16px; padding: 16px; }
+      .pillar-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+      .pillar-name { margin: 0; font-weight: 700; font-size: 15.5px; }
+      .pillar-score { margin: 0; font-size: 26px; font-weight: 900; }
+      .bar { margin-top: 8px; height: 8px; border-radius: 99px; background: var(--border); overflow: hidden; }
+      .bar > div { height: 100%; border-radius: 99px; transition: width .45s ease; }
+      .bar .good { background: var(--green); } .bar .mid { background: #d99a26; } .bar .bad { background: #cf4438; }
+      .pillar-hint { margin: 8px 0 0; font-size: 12.5px; color: var(--dim); line-height: 1.5; }
+
+      /* ---------- Valuation ---------- */
+      .stat-grid { display: grid; gap: 12px; margin-top: 20px; }
+      @media (min-width: 760px) { .stat-grid { grid-template-columns: 1fr 1fr 1fr; } }
+      .stat { background: var(--surface2); border-radius: 16px; padding: 16px; }
+      .stat.dark { background: var(--navy); color: #fff; }
+      .stat-label { margin: 0; font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+      .stat.dark .stat-label { color: #b9c9d9; }
+      .stat-big { margin: 6px 0 0; font-size: 25px; font-weight: 900; line-height: 1.15; }
+      .stat-note { margin: 5px 0 0; font-size: 12.5px; color: var(--dim); line-height: 1.5; }
+      .stat.dark .stat-note { color: #b9c9d9; }
+      .empty-box { margin-top: 18px; border: 1.5px dashed var(--border); border-radius: 16px; padding: 22px; text-align: center; }
+      .empty-box p { margin: 0; }
+      .btn-navy { margin-top: 12px; border: 0; border-radius: 10px; background: var(--navy); color: #fff; padding: 9px 16px; font-size: 14px; font-weight: 700; }
+      @media (prefers-color-scheme: dark) { .btn-navy { background: var(--accent); color: #1c1005; } }
+      .duo { display: grid; gap: 12px; margin-top: 20px; }
+      @media (min-width: 640px) { .duo { grid-template-columns: 1fr 1fr; } }
+      .up-box, .down-box { border-radius: 16px; padding: 16px; font-size: 14.5px; }
+      .up-box { border: 1px solid color-mix(in srgb, var(--green) 40%, var(--border)); background: color-mix(in srgb, var(--green) 7%, var(--surface)); }
+      .down-box { border: 1px solid color-mix(in srgb, var(--red) 35%, var(--border)); background: color-mix(in srgb, var(--red) 6%, var(--surface)); }
+      .up-box h3 { margin: 0; font-size: 15.5px; color: var(--green); }
+      .down-box h3 { margin: 0; font-size: 15.5px; color: var(--red); }
+      .up-box ul, .down-box ul { margin: 8px 0 0; padding-left: 20px; line-height: 1.55; }
+      .up-box li, .down-box li { margin-top: 4px; }
+      .warn-box { margin-top: 16px; border-radius: 16px; padding: 16px; font-size: 14.5px; line-height: 1.6; background: color-mix(in srgb, var(--amber) 12%, var(--surface)); }
+      .band-row {
+        display: flex; flex-direction: column; gap: 2px;
+        background: var(--surface2); border-radius: 12px; padding: 12px 14px; margin-top: 8px; font-size: 14.5px;
+      }
+      @media (min-width: 640px) { .band-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; } }
+      .band-mult { font-weight: 900; color: var(--accent-ink); white-space: nowrap; }
+      .band-note { color: var(--dim); }
+      @media (min-width: 640px) { .band-note { max-width: 380px; text-align: right; } }
+      .fine { margin-top: 12px; font-size: 12.5px; color: var(--dim); line-height: 1.55; }
+
+      /* ---------- Checklist & vault ---------- */
+      .progress-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px; }
+      .progress-pct { margin: 0; font-size: 30px; font-weight: 900; line-height: 1; }
+      .progress-bar { margin-top: 12px; height: 10px; border-radius: 99px; background: var(--border); overflow: hidden; }
+      .progress-bar > div { height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s ease; }
+      .progress-bar > div.green { background: var(--green); }
+      .cat-title { margin: 26px 0 0; font-size: 12.5px; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; color: var(--dim); }
+      .item {
+        margin-top: 10px; border: 1px solid var(--border); background: var(--surface2);
+        border-radius: 16px; padding: 16px;
+      }
+      .item.done { border-color: color-mix(in srgb, var(--green) 45%, var(--border)); background: color-mix(in srgb, var(--green) 6%, var(--surface)); }
+      .item-flex { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; justify-content: space-between; }
+      .item-main { flex: 1 1 260px; min-width: 0; }
+      .item-title { margin: 0; font-weight: 700; font-size: 15.5px; line-height: 1.4; }
+      .impact {
+        display: inline-block; vertical-align: 2px; margin-left: 6px;
+        background: var(--accent); color: #fff; border-radius: 99px;
+        padding: 2px 8px; font-size: 10.5px; font-weight: 800; letter-spacing: .04em;
+      }
+      .item-desc { margin: 5px 0 0; font-size: 14px; color: var(--dim); line-height: 1.55; }
+      .seg { display: flex; gap: 5px; flex-shrink: 0; }
+      .seg button {
+        border: 1px solid var(--border); background: var(--surface); color: var(--dim);
+        border-radius: 99px; padding: 7px 12px; font-size: 12.5px; font-weight: 700; text-transform: capitalize;
+      }
+      .seg button.sel-todo { background: var(--navy); border-color: var(--navy); color: #fff; }
+      .seg button.sel-doing { background: #c07f14; border-color: #c07f14; color: #fff; }
+      .seg button.sel-done { background: var(--green); border-color: var(--green); color: #fff; }
+      .remove-btn { margin-top: 8px; border: 0; background: none; padding: 0; font-size: 12.5px; font-weight: 700; color: var(--red); }
+      .add-box { margin-top: 28px; border: 1.5px dashed var(--border); border-radius: 16px; padding: 18px; }
+      .add-box h3 { margin: 0; font-size: 16px; }
+      .add-grid { display: grid; gap: 12px; margin-top: 12px; }
+      @media (min-width: 640px) { .add-grid { grid-template-columns: 1fr 2fr; } }
+      .btn-add { margin-top: 14px; border: 0; border-radius: 12px; background: var(--navy); color: #fff; padding: 11px 18px; font-size: 14px; font-weight: 700; }
+      .btn-add:disabled { opacity: .4; cursor: not-allowed; }
+      @media (prefers-color-scheme: dark) { .btn-add { background: var(--accent); color: #1c1005; } }
+
+      /* ---------- Routes ---------- */
+      .quiz-q { border: 0; padding: 0; margin: 26px 0 0; min-width: 0; }
+      .quiz-q legend { font-weight: 700; font-size: 16px; padding: 0; }
+      .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+      .chip {
+        border: 1px solid var(--border); background: var(--surface2); color: var(--text);
+        border-radius: 99px; padding: 9px 15px; font-size: 14px; font-weight: 700;
+      }
+      .chip.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+      .result {
+        margin-top: 28px; background: var(--navy); color: #fff; border-radius: 18px; padding: 20px;
+      }
+      .result-kicker { margin: 0; font-size: 11.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #f2a56b; }
+      .result h3 { margin: 6px 0 0; font-size: 25px; font-weight: 900; line-height: 1.2; }
+      .score-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; font-size: 14px; }
+      .score-row .name { flex: 0 0 168px; font-weight: 600; }
+      @media (max-width: 480px) { .score-row .name { flex-basis: 118px; font-size: 13px; } }
+      .score-track { flex: 1; height: 8px; border-radius: 99px; background: rgba(255,255,255,.2); overflow: hidden; }
+      .score-track > div { height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s ease; }
+      .score-row .val { font-weight: 800; min-width: 18px; text-align: right; }
+      .result .fine { color: #b9c9d9; }
+      .route-card { background: var(--surface); border-radius: 24px; padding: 20px; margin-top: 16px; box-shadow: var(--shadow); }
+      @media (min-width: 640px) { .route-card { padding: 26px; } }
+      .route-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 8px; }
+      .route-card h3 { margin: 0; font-size: 20px; font-weight: 800; }
+      .route-tag { margin: 2px 0 0; font-size: 14px; font-weight: 700; color: var(--accent-ink); }
+      .fit-badge { background: var(--green); color: #fff; border-radius: 99px; padding: 5px 12px; font-size: 11.5px; font-weight: 800; letter-spacing: .03em; }
+      .route-best { margin: 10px 0 0; font-size: 14.5px; line-height: 1.6; }
+      .route-facts { display: grid; gap: 10px; margin-top: 14px; }
+      @media (min-width: 760px) { .route-facts { grid-template-columns: 1fr 1fr 1fr; } }
+      .fact { background: var(--surface2); border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.5; }
+      .fact-label { margin: 0 0 3px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+      .fact p { margin: 0; }
+      .route-lists { display: grid; gap: 14px; margin-top: 14px; font-size: 14.5px; }
+      @media (min-width: 640px) { .route-lists { grid-template-columns: 1fr 1fr; } }
+      .route-lists p.head { margin: 0; font-weight: 800; }
+      .route-lists p.head.good { color: var(--green); } .route-lists p.head.bad { color: var(--red); }
+      .route-lists ul { margin: 6px 0 0; padding-left: 20px; line-height: 1.55; }
+      .route-lists li { margin-top: 3px; }
+
+      footer { margin-top: 34px; text-align: center; font-size: 12.5px; color: var(--dim); line-height: 1.6; padding: 0 8px; }
+      [hidden] { display: none !important; }
+      @media (prefers-reduced-motion: reduce) {
+        .meter > div, .bar > div, .progress-bar > div, .score-track > div { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <!-- HERO -->
+      <section class="hero">
+        <div class="hero-body">
+          <p class="hero-kicker">HVAC Acquisition Prep</p>
+          <h1 class="display" id="heroTitle">Your HVAC company — are you actually ready to sell?</h1>
+          <p class="hero-sub">Most owners find out what buyers will discount <em>after</em> the LOI. This flips that: enter your real numbers, fix the leaks that kill multiples, and pick the exit route that fits your size and goals — before anyone sees your books.</p>
+          <div class="hero-grid">
+            <div class="hero-card">
+              <p class="hero-card-label">Readiness score</p>
+              <p class="hero-big display"><span id="heroScore">26</span><small> /100</small></p>
+              <div class="meter"><div id="heroScoreBar" style="width:26%"></div></div>
+              <p class="hero-note" id="heroScoreNote">Prep mode — a few fixes move the multiple a lot.</p>
+            </div>
+            <div class="hero-card">
+              <p class="hero-card-label">Indicative value range</p>
+              <div id="heroValEmpty">
+                <p class="hero-val display">Add EBITDA below</p>
+                <p class="hero-note">Enter EBITDA or owner cash flow in your snapshot and your range appears here instantly.</p>
+              </div>
+              <div id="heroValFull" hidden>
+                <p class="hero-val display" id="heroValRange"></p>
+                <p class="hero-note" id="heroValNote"></p>
+              </div>
+            </div>
+            <div class="hero-card accent">
+              <p class="hero-card-label">Your next 3 highest-impact moves</p>
+              <ul class="hero-next" id="heroNext"></ul>
+              <button class="hero-cta" type="button" data-goto="readiness">Open checklist →</button>
+            </div>
+          </div>
+        </div>
+        <nav class="tabs" aria-label="Sections" id="tabNav"></nav>
+      </section>
+
+      <!-- OVERVIEW -->
+      <div id="tab-overview">
+        <section class="panel">
+          <h2 class="display">1 — Your business snapshot</h2>
+          <p class="lede">Rough is fine to start. These numbers drive your score, valuation range, and route fit, and everything updates live as you type.</p>
+          <div class="tryit"><strong>Just looking?</strong> Try a sample shop: revenue $2,400,000 · EBITDA $420,000 · growth 8% · recurring 28% · 620 agreements · 9 techs · 14 employees · owner 45 hrs/week · top customer 12% — then flip on “Has a GM” and “Monthly financial close” and watch the score and value range move.</div>
+          <form id="snapshotForm" autocomplete="off">
+            <div class="form-grid">
+              <label class="field"><span class="field-label">Company name</span>
+                <input class="plain-input" id="f_company_name" type="text" placeholder="e.g. Smith Air &amp; Heat" /></label>
+              <label class="field"><span class="field-label">Market / city &amp; state</span>
+                <input class="plain-input" id="f_location" type="text" placeholder="e.g. Tampa, FL" /></label>
+              <label class="field"><span class="field-label">Annual revenue (last 12 mo)</span>
+                <span class="input-wrap"><span class="affix">$</span><input id="f_annual_revenue" type="number" inputmode="numeric" min="0" placeholder="0" /></span></label>
+              <label class="field"><span class="field-label">EBITDA (normalized)</span>
+                <span class="input-wrap"><span class="affix">$</span><input id="f_ebitda" type="number" inputmode="numeric" min="0" placeholder="0" /></span>
+                <span class="field-hint">Profit after a market salary for the owner/GM. If unsure, use owner cash flow below.</span></label>
+              <label class="field"><span class="field-label">Owner cash flow / SDE</span>
+                <span class="input-wrap"><span class="affix">$</span><input id="f_owner_cash_flow" type="number" inputmode="numeric" min="0" placeholder="0" /></span>
+                <span class="field-hint">EBITDA + owner salary, benefits, personal add-backs. Brokers use this for smaller shops.</span></label>
+              <label class="field"><span class="field-label">Years in business</span>
+                <span class="input-wrap"><input id="f_years_in_business" type="number" inputmode="numeric" min="0" placeholder="0" /></span></label>
+              <label class="field"><span class="field-label">Revenue growth last year</span>
+                <span class="input-wrap"><input id="f_growth_rate_pct" type="number" inputmode="decimal" placeholder="0" /><span class="affix">%</span></span></label>
+              <label class="field"><span class="field-label">Recurring / agreement revenue</span>
+                <span class="input-wrap"><input id="f_recurring_pct" type="number" inputmode="numeric" min="0" max="100" placeholder="0" /><span class="affix">%</span></span>
+                <span class="field-hint">Share of revenue from maintenance agreements &amp; recurring service.</span></label>
+              <label class="field"><span class="field-label">Residential share</span>
+                <span class="input-wrap"><input id="f_residential_pct" type="number" inputmode="numeric" min="0" max="100" placeholder="0" /><span class="affix">%</span></span></label>
+              <label class="field"><span class="field-label">Active maintenance agreements</span>
+                <span class="input-wrap"><input id="f_maintenance_agreements" type="number" inputmode="numeric" min="0" placeholder="0" /></span></label>
+              <label class="field"><span class="field-label">Technicians (field)</span>
+                <span class="input-wrap"><input id="f_tech_count" type="number" inputmode="numeric" min="0" placeholder="0" /></span></label>
+              <label class="field"><span class="field-label">Total employees</span>
+                <span class="input-wrap"><input id="f_total_employees" type="number" inputmode="numeric" min="0" placeholder="0" /></span></label>
+              <label class="field"><span class="field-label">Owner hours / week in the business</span>
+                <span class="input-wrap"><input id="f_owner_hours_per_week" type="number" inputmode="numeric" min="0" placeholder="0" /></span>
+                <span class="field-hint">The single best predictor of owner-dependence discount.</span></label>
+              <label class="field"><span class="field-label">Top customer share of revenue</span>
+                <span class="input-wrap"><input id="f_top_customer_pct" type="number" inputmode="numeric" min="0" max="100" placeholder="0" /><span class="affix">%</span></span></label>
+            </div>
+            <div class="bool-grid" id="boolGrid"></div>
+            <div class="form-grid">
+              <label class="field"><span class="field-label">When are you thinking of selling?</span>
+                <select class="plain-input" id="f_timeline">
+                  <option>Just exploring</option><option>Under 6 months</option><option>6-12 months</option><option>12-24 months</option><option>2-3 years</option>
+                </select></label>
+              <label class="field"><span class="field-label">What does a great exit look like for you?</span>
+                <input class="plain-input" id="f_exit_goal" type="text" placeholder="e.g. Retire, keep the name, take care of my techs" /></label>
+            </div>
+          </form>
+          <p class="session-note">Everything on this page runs in your browser for this visit only — nothing you enter is sent anywhere or saved, and it clears when you close or reload the page.</p>
+        </section>
+
+        <section class="panel">
+          <h2 class="display">How buyers will score you</h2>
+          <p class="lede">Six pillars acquirers actually diligence. Weak pillars don’t just lower price — they add earn-outs, holdbacks, and “seller must stay” conditions.</p>
+          <div class="pillar-grid" id="pillarGrid"></div>
+        </section>
+      </div>
+
+      <!-- VALUATION -->
+      <div id="tab-valuation" hidden>
+        <section class="panel">
+          <h2 class="display">What your shop could sell for — and why it’s a range</h2>
+          <p class="lede">HVAC deals are priced on normalized earnings × a multiple. The multiple is not magic: it rises with recurring agreements, clean monthly books, a GM who runs the day, and growth — and falls with owner-dependence, install-only revenue, and customer concentration. This is an educational starting range, not a formal valuation or Quality of Earnings review.</p>
+          <div id="valStats"></div>
+          <div class="duo">
+            <div class="up-box">
+              <h3>↑ Moves the multiple up</h3>
+              <ul>
+                <li>Maintenance agreements with high renewal &amp; documented visits</li>
+                <li>Service &amp; replacement mix, not just new-construction install</li>
+                <li>GM + dispatch that work when you’re on vacation</li>
+                <li>Monthly financials that tie to tax returns, clean add-backs</li>
+                <li>Diversified customers, strong Google reputation, equipment-age data</li>
+              </ul>
+            </div>
+            <div class="down-box">
+              <h3>↓ Moves it down (or adds an earn-out)</h3>
+              <ul>
+                <li>Owner is lead tech, lead salesperson &amp; dispatcher in one</li>
+                <li>One builder/GC is 25%+ of revenue</li>
+                <li>Cash jobs, personal expenses through the business, tax-time-only books</li>
+                <li>License held only by the exiting owner</li>
+                <li>Aging fleet with big capex due in year one</li>
+              </ul>
+            </div>
+          </div>
+          <div class="warn-box"><strong>Before you quote a price to anyone:</strong> get a CPA/broker market valuation and, for larger deals, a Quality of Earnings review. A buyer will do one — you want to see your numbers through their eyes first. Also model after-tax proceeds: asset vs stock sale, seller-note risk, and working capital can swing what you keep by 15–30%.</div>
+        </section>
+        <section class="panel">
+          <h2 class="display">Size bands buyers talk in (rule of thumb)</h2>
+          <div id="bandList" style="margin-top:10px"></div>
+          <p class="fine">Bands are general educational ranges for residential/light-commercial HVAC and vary by market, mix, and deal terms — cash at close vs earn-out changes the real value of any headline multiple.</p>
+        </section>
+      </div>
+
+      <!-- READINESS CHECKLIST -->
+      <div id="tab-readiness" hidden>
+        <section class="panel">
+          <div class="progress-head">
+            <div>
+              <h2 class="display">Prep checklist — work this before you talk price</h2>
+              <p class="lede" id="checklistSummary"></p>
+            </div>
+            <p class="progress-pct display" id="checklistPct">0%</p>
+          </div>
+          <div class="progress-bar"><div id="checklistBar" style="width:0%"></div></div>
+          <div id="checklistBody"></div>
+          <div class="add-box">
+            <h3 class="display">Add your own prep item</h3>
+            <div class="add-grid">
+              <label class="field"><span class="field-label">Category</span>
+                <select class="plain-input" id="newTaskCategory">
+                  <option>Financials</option><option>Operations</option><option>Team &amp; Owner</option><option>Customers</option><option>Legal &amp; Risk</option>
+                </select></label>
+              <label class="field"><span class="field-label">Title</span>
+                <input class="plain-input" id="newTaskTitle" type="text" placeholder="e.g. Renew master license paperwork" /></label>
+            </div>
+            <label class="field" style="margin-top:12px"><span class="field-label">Notes / why it matters</span>
+              <input class="plain-input" id="newTaskDesc" type="text" /></label>
+            <button class="btn-add" id="addTaskBtn" type="button" disabled>Add to checklist</button>
+          </div>
+        </section>
+      </div>
+
+      <!-- ROUTES -->
+      <div id="tab-routes" hidden>
+        <section class="panel">
+          <h2 class="display">Route finder — answer 6 questions</h2>
+          <p class="lede">There’s no universally “best” route. The right one is the one that fits your size, timeline, and what you want life to look like the day after close.</p>
+          <div id="quizBody"></div>
+          <div class="result" id="quizResult" hidden>
+            <p class="result-kicker">Your best-fit route right now</p>
+            <h3 class="display" id="quizResultName"></h3>
+            <div id="quizScores" style="margin-top:8px"></div>
+            <p class="fine">Use this as a starting conversation — then interview at least two advisors/buyers on that route before signing an exclusivity or LOI.</p>
+          </div>
+        </section>
+        <div id="routeCards"></div>
+        <div class="warn-box" style="border-radius:24px; margin-top:16px; box-shadow: var(--shadow);"><strong>Golden rules for any route:</strong> never sign a long exclusivity without a clear buyer list &amp; timeline; never share full financials before an NDA; never accept a headline price without asking how much is cash at close vs earn-out / seller note / rollover; and keep running the business — a revenue dip during diligence is the #1 reason deals get re-priced.</div>
+      </div>
+
+      <!-- VAULT -->
+      <div id="tab-vault" hidden>
+        <section class="panel">
+          <div class="progress-head">
+            <div>
+              <h2 class="display">Diligence vault — gather it before they ask</h2>
+              <p class="lede">Deals slow down (and get re-priced) when documents trickle in. Mark each item Missing → Requested → Ready as you pull it from your CPA, CRM, and office files.</p>
+              <p class="lede" id="vaultSummary" style="font-weight:700; color:var(--text)"></p>
+            </div>
+          </div>
+          <div class="progress-bar"><div class="green" id="vaultBar" style="width:0%"></div></div>
+          <div id="vaultBody"></div>
+          <p class="fine" style="margin-top:24px">This checklist tracks readiness only — it doesn’t store the documents themselves. Keep originals in your CPA / data-room system and share them only under NDA, in stages.</p>
+        </section>
+      </div>
+
+      <footer>Educational prep tool — not a valuation, appraisal, or legal/tax advice. Talk to an HVAC-experienced CPA, M&amp;A attorney, and advisor before signing an LOI or listing agreement.</footer>
+    </main>
+
+    <script>
+    (function () {
+      "use strict";
+
+      /* ---------------- Data (same prep content as the full workspace) ---------------- */
+      var DEFAULT_TASKS = [
+        { category: "Financials", title: "Clean up 3 years of P&Ls", description: "Separate personal expenses, normalize owner comp, remove one-offs. Buyers and lenders will recast this anyway — do it first.", impact: "High" },
+        { category: "Financials", title: "Build an add-backs schedule", description: "List owner salary above market, personal vehicle/insurance, one-time legal, family on payroll — with proof for each.", impact: "High" },
+        { category: "Financials", title: "Move to monthly close in 15 days", description: "Monthly P&L + balance sheet, reviewed with CPA. No monthly financials = big discount in diligence.", impact: "High" },
+        { category: "Financials", title: "Tighten AR, AP & work-in-progress", description: "Age receivables, document WIP method, clean inventory counts for trucks and warehouse.", impact: "Medium" },
+        { category: "Operations", title: "Document your dispatch & pricing playbook", description: "Flat-rate book, dispatch rules, callback/warranty process — in writing, not in the owner's head.", impact: "High" },
+        { category: "Operations", title: "Prove maintenance agreements are real revenue", description: "Count active agreements, renewal rate, visits completed, and revenue per agreement. This is the multiple-maker.", impact: "High" },
+        { category: "Operations", title: "Reduce callbacks & warranty drag", description: "Track callback rate by tech, fix training gaps. Buyers ask for this in diligence.", impact: "Medium" },
+        { category: "Team & Owner", title: "Install or empower a GM / ops manager", description: "Someone besides the owner who can run Tuesday without you. Test it with a 2-week owner-away sprint.", impact: "High" },
+        { category: "Team & Owner", title: "Retention plan for top techs", description: "Document pay, certs, non-solicits where enforceable, and stay-bonus ideas. Techs walking = deal risk.", impact: "High" },
+        { category: "Team & Owner", title: "Cut owner hours in dispatch & sales", description: "Track where owner time goes. Replace owner in estimates, escalations, and bookkeeping approvals step by step.", impact: "High" },
+        { category: "Customers", title: "Fix customer concentration", description: "If one GC, builder, or property manager is >10% of revenue, grow around them or document contract durability.", impact: "High" },
+        { category: "Customers", title: "Clean CRM & customer list", description: "Every customer, address, equipment age, last service, agreement status — exportable from ServiceTitan / Housecall Pro / etc.", impact: "Medium" },
+        { category: "Customers", title: "Collect reviews & prove reputation", description: "Google rating, review count, referral sources. PE platforms pay for a brand that generates its own leads.", impact: "Medium" },
+        { category: "Legal & Risk", title: "Licenses, insurance & permits in order", description: "Contractor license, EPA certs, bonding, COIs, safety/OSHA logs — one folder, current dates.", impact: "Medium" },
+        { category: "Legal & Risk", title: "Lease, fleet & debt inventory", description: "Truck titles/leases, equipment debt, building lease assignability, personal guarantees to unwind.", impact: "Medium" },
+        { category: "Legal & Risk", title: "Entity & tax cleanup", description: "S-corp vs LLC structure, sales tax on parts, 1099 vs W-2 for helpers/subs, open permits — fix before LOI.", impact: "High" }
+      ];
+
+      var DEFAULT_DOCS = [
+        { category: "Financials", name: "P&L — last 3 years + YTD", why: "Core of valuation. Must tie to tax returns." },
+        { category: "Financials", name: "Business tax returns — 3 years", why: "Buyer/lender verifies revenue and add-backs here." },
+        { category: "Financials", name: "Balance sheet — current + year-end", why: "Shows debt, AR, inventory buyers will price." },
+        { category: "Financials", name: "Add-backs & owner comp schedule", why: "Turns messy SDE into defensible EBITDA." },
+        { category: "Operations", name: "Maintenance agreement roster & renewal rate", why: "Proves recurring revenue is contracted, not hoped for." },
+        { category: "Operations", name: "Revenue by line: service / install / commercial", why: "Install-heavy vs service-heavy gets a very different multiple." },
+        { category: "Operations", name: "Fleet & equipment list with age / mileage", why: "Capex needs can kill a price at the last minute." },
+        { category: "Team", name: "Org chart + roster with tenure & pay bands", why: "Buyers are buying techs and dispatch as much as trucks." },
+        { category: "Team", name: "Licenses, certs & training records", why: "License holder leaving is a top HVAC deal-breaker." },
+        { category: "Legal", name: "Entity docs, leases & insurance binder", why: "Assignability and coverage are closing conditions." },
+        { category: "Customers", name: "Top 20 customers by revenue (12 mo)", why: "Concentration is priced immediately." },
+        { category: "Customers", name: "CRM export — customers & equipment age", why: "Equipment age = future replacement pipeline a buyer can model." }
+      ];
+
+      var ROUTES = [
+        { id: "broker", name: "Business Broker", tag: "Most common for $500k–$5M revenue", bestFor: "Owner wants a managed sale, broad buyer pool, and help with SBA buyers & local operators.", fees: "Typically 8–12% on smaller deals (often with a minimum), paid at close", timeline: "6–12 months", confidentiality: "Moderate — listings are blind, but word can travel locally", stay: "Usually a short transition (30–90 days)", pros: ["Widest pool of individual & small-group buyers", "Handles valuation, listing, buyer screening, SBA loan process", "Good fit when EBITDA is under ~$750k"], cons: ["Quality varies hugely — interview 3", "Less reach into PE platforms", "Fees bite on smaller deals"] },
+        { id: "pe", name: "Direct to PE / HVAC Platform", tag: "Residential platforms are actively buying", bestFor: "$2M+ revenue, strong service/agreements, owner open to rollover equity or staying on.", fees: "No broker fee if truly direct — but price/leverage is on you", timeline: "3–7 months if they are motivated", confidentiality: "High at first — direct NDA conversations", stay: "Often 1–3 years, or rollover 20–40% equity", pros: ["No sell-side fee, often fastest credible close", "Can pay top multiples for agreements & techs", "Rollover can create a second, bigger exit"], cons: ["They do this weekly; you do it once — information gap", "Earn-outs & rollover shift risk back to you", "No market check means you may leave money on table"] },
+        { id: "banker", name: "M&A Advisor / Investment Banker", tag: "For $10M+ revenue or $1.5M+ EBITDA", bestFor: "Bigger, cleaner shops that want a competitive process among PE & strategics.", fees: "Retainer + 3–6% success fee (declining scale)", timeline: "7–12 months for a full process", confidentiality: "High — controlled, staged data room", stay: "Negotiated — often transition + possible rollover", pros: ["Creates real competition = price tension", "Runs diligence, QoE, and negotiation for you", "Best shot at premium multiple"], cons: ["Overkill / too expensive below scale", "Process is intense for owner & office staff", "Retainers due even if no sale"] },
+        { id: "strategic", name: "Strategic / Competitor Buyer", tag: "Regional shop, national brand, or adjacent trades", bestFor: "A known buyer wants your territory, agreements, or commercial accounts.", fees: "No fee if direct; advisor fee if you hire leverage", timeline: "3–9 months", confidentiality: "Lowest — your competitor learns your numbers if it dies", stay: "Varies — brand may be retired, team usually kept", pros: ["Synergies can justify a strong price", "Knows the market, diligence is practical", "Good home for team & customers"], cons: ["Highest leak / poaching risk if deal fails", "Single buyer = no tension, price can drift down", "Culture & brand often disappear"] },
+        { id: "internal", name: "Internal Sale / ESOP / GM Buyout", tag: "Legacy-first route", bestFor: "Trusted GM/family/second-in-command, owner prioritizes legacy & team over max price.", fees: "Legal + valuation + lender costs; ESOP setup is significant", timeline: "9–18 months to structure well", confidentiality: "Highest — stays inside the building", stay: "Gradual, on your terms — months to years", pros: ["Preserves name, team, and culture", "Seller note / SBA can make it financeable", "Most control over your exit pace"], cons: ["Usually below market price", "You carry financing risk for years", "Buyer depth is one person — if they balk, restart"] }
+      ];
+
+      var QUIZ = [
+        { key: "size", q: "Where is revenue today?", options: [
+          { label: "Under $1M", scores: { broker: 3, internal: 2 } },
+          { label: "$1M – $3M", scores: { broker: 3, pe: 1, strategic: 1 } },
+          { label: "$3M – $10M", scores: { pe: 3, broker: 1, banker: 1, strategic: 1 } },
+          { label: "$10M+", scores: { banker: 3, pe: 2 } } ] },
+        { key: "timeline", q: "When do you want to be out?", options: [
+          { label: "ASAP — under 6 months", scores: { pe: 2, strategic: 2, broker: 1 } },
+          { label: "6–18 months", scores: { broker: 2, pe: 2, banker: 1 } },
+          { label: "2–3 years — I can prep", scores: { banker: 2, internal: 2, pe: 1 } },
+          { label: "Just exploring", scores: { internal: 1, banker: 1, broker: 1 } } ] },
+        { key: "after", q: "After the sale, you want to…", options: [
+          { label: "Be done — clean exit", scores: { broker: 3, strategic: 2 } },
+          { label: "Stay 6–24 months to transition", scores: { pe: 2, broker: 1, banker: 1 } },
+          { label: "Roll equity & keep growing it", scores: { pe: 4 } },
+          { label: "Slowly hand it to my GM / family", scores: { internal: 4 } } ] },
+        { key: "priority", q: "What matters most?", options: [
+          { label: "Highest possible price", scores: { banker: 3, pe: 2 } },
+          { label: "Certainty & speed of closing", scores: { pe: 3, strategic: 2 } },
+          { label: "My team & name are protected", scores: { internal: 3, pe: 1 } },
+          { label: "Lowest fees & simplest process", scores: { pe: 2, strategic: 1, internal: 1 } } ] },
+        { key: "secrecy", q: "How sensitive is confidentiality?", options: [
+          { label: "Critical — staff/customers can't know", scores: { banker: 2, pe: 2, internal: 2 } },
+          { label: "Important, but manageable", scores: { broker: 1, pe: 1, banker: 1 } },
+          { label: "Not a big issue", scores: { broker: 2, strategic: 1 } } ] },
+        { key: "help", q: "How much process help do you want?", options: [
+          { label: "Run it all for me", scores: { broker: 3, banker: 3 } },
+          { label: "Advise & negotiate, I'll do legwork", scores: { banker: 2, broker: 1 } },
+          { label: "Just open doors, I'll negotiate", scores: { pe: 2, strategic: 2 } },
+          { label: "Keep it in-house", scores: { internal: 3 } } ] }
+      ];
+
+      var BANDS = [
+        ["SDE under $250k", "2.8× – 4×", "Usually broker / individual buyer, SBA loan, owner transition is critical"],
+        ["EBITDA $250k – $500k", "3.5× – 5×", "Broker + local PE add-ons compete here"],
+        ["EBITDA $500k – $1M", "4.5× – 6×", "PE platforms get serious if agreements & team are strong"],
+        ["EBITDA $1M – $2M", "5.5× – 7×", "Competitive tension becomes possible"],
+        ["EBITDA $2M+", "6.5× – 8.5×+", "Banker-run process, rollover & platform value in play"]
+      ];
+
+      var BOOLS = [
+        { key: "has_gm", label: "Has a GM / ops manager", hint: "Someone who can run operations without you daily." },
+        { key: "has_crm", label: "Uses CRM / field software", hint: "ServiceTitan, Housecall Pro, Jobber, etc. — with clean data." },
+        { key: "monthly_financials", label: "Monthly financial close", hint: "P&L closed monthly, not just at tax time." }
+      ];
+
+      var NUM_FIELDS = ["annual_revenue", "ebitda", "owner_cash_flow", "years_in_business", "growth_rate_pct", "recurring_pct", "residential_pct", "maintenance_agreements", "tech_count", "total_employees", "owner_hours_per_week", "top_customer_pct"];
+
+      /* ---------------- Session-only state ---------------- */
+      var profile = {
+        company_name: "", location: "", years_in_business: 0, annual_revenue: 0, ebitda: 0,
+        owner_cash_flow: 0, growth_rate_pct: 0, recurring_pct: 0, residential_pct: 0,
+        maintenance_agreements: 0, tech_count: 0, total_employees: 0, owner_hours_per_week: 0,
+        top_customer_pct: 0, has_gm: false, has_crm: false, monthly_financials: false,
+        timeline: "Just exploring", exit_goal: ""
+      };
+      var tasks = DEFAULT_TASKS.map(function (t) { return { category: t.category, title: t.title, description: t.description, impact: t.impact, status: "not_started", custom: false }; });
+      var docs = DEFAULT_DOCS.map(function (d) { return { category: d.category, name: d.name, why: d.why, status: "missing" }; });
+      var quizAnswers = {};
+
+      /* ---------------- Scoring (identical logic to the full workspace) ---------------- */
+      function money(n) {
+        if (!n) return "$0";
+        if (n >= 1000000) return "$" + (n / 1000000).toFixed(n >= 10000000 ? 1 : 2) + "M";
+        if (n >= 1000) return "$" + Math.round(n / 1000) + "k";
+        return "$" + n;
+      }
+      function moneyFull(n) {
+        return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+      }
+      function multipleRange(p) {
+        var earnings = p.ebitda || p.owner_cash_flow;
+        var low = 3, high = 4.5;
+        if (earnings >= 2000000) { low = 6.5; high = 8.5; }
+        else if (earnings >= 1000000) { low = 5.5; high = 7; }
+        else if (earnings >= 500000) { low = 4.5; high = 6; }
+        else if (earnings >= 250000) { low = 3.5; high = 5; }
+        else if (earnings > 0) { low = 2.8; high = 4; }
+        var adj = 0;
+        if (p.recurring_pct >= 30) adj += 0.5; else if (p.recurring_pct >= 20) adj += 0.25;
+        if (p.growth_rate_pct >= 10) adj += 0.3;
+        if (p.has_gm) adj += 0.25;
+        if (p.owner_hours_per_week >= 40) adj -= 0.5;
+        if (p.top_customer_pct >= 20) adj -= 0.5;
+        low = Math.max(2, Math.round((low + adj) * 10) / 10);
+        high = Math.max(low + 0.5, Math.round((high + adj) * 10) / 10);
+        return { low: low, high: high, earnings: earnings };
+      }
+      function pillars(p) {
+        var finTasks = tasks.filter(function (t) { return t.category === "Financials"; });
+        var finDone = finTasks.length ? finTasks.filter(function (t) { return t.status === "done"; }).length / finTasks.length : 0;
+        var opsTasks = tasks.filter(function (t) { return t.category === "Operations"; });
+        var opsDone = opsTasks.length ? opsTasks.filter(function (t) { return t.status === "done"; }).length / opsTasks.length : 0;
+        var docReady = docs.length ? docs.filter(function (d) { return d.status === "ready"; }).length / docs.length : 0;
+        var financial = Math.round(Math.min(100, (p.monthly_financials ? 35 : 8) + (p.ebitda > 0 ? 20 : 0) + (p.annual_revenue > 0 ? 15 : 0) + finDone * 30));
+        var recurring = Math.round(p.recurring_pct >= 40 ? 96 : p.recurring_pct >= 30 ? 85 : p.recurring_pct >= 20 ? 66 : p.recurring_pct >= 10 ? 42 : p.recurring_pct > 0 ? 24 : 10);
+        var ownerBase = p.owner_hours_per_week <= 10 && p.owner_hours_per_week > 0 ? 82 : p.owner_hours_per_week <= 20 ? 68 : p.owner_hours_per_week <= 30 ? 50 : p.owner_hours_per_week <= 40 ? 34 : 18;
+        var owner = Math.round(Math.max(5, Math.min(100, ownerBase + (p.has_gm ? 14 : 0))));
+        var teamOps = Math.round(Math.min(100, 18 + (p.has_crm ? 22 : 0) + (p.has_gm ? 24 : 0) + (p.tech_count >= 10 ? 16 : p.tech_count >= 5 ? 9 : 3) + opsDone * 20));
+        var customer = Math.round(p.top_customer_pct === 0 ? 45 : p.top_customer_pct <= 5 ? 94 : p.top_customer_pct <= 10 ? 80 : p.top_customer_pct <= 20 ? 54 : 28);
+        var documentation = Math.round(docReady * 100);
+        var readyCount = docs.filter(function (d) { return d.status === "ready"; }).length;
+        var list = [
+          { label: "Financial clarity", score: financial, hint: p.monthly_financials ? "Monthly close in place" : "No monthly close — buyers discount this fast" },
+          { label: "Recurring revenue", score: recurring, hint: p.recurring_pct + "% recurring • " + p.maintenance_agreements.toLocaleString() + " agreements" },
+          { label: "Owner independence", score: owner, hint: p.has_gm ? "GM in place helps a lot" : "No GM — the business still runs through you" },
+          { label: "Team & operations", score: teamOps, hint: p.tech_count + " techs • " + (p.has_crm ? "CRM in use" : "No CRM flagged") },
+          { label: "Customer risk", score: customer, hint: p.top_customer_pct ? "Top customer is " + p.top_customer_pct + "% of revenue" : "Add top-customer % to score this" },
+          { label: "Diligence-ready docs", score: documentation, hint: readyCount + " of " + docs.length + " documents ready" }
+        ];
+        var overall = Math.round(list.reduce(function (a, b) { return a + b.score; }, 0) / list.length);
+        return { list: list, overall: overall };
+      }
+      function quizResult() {
+        var scores = { broker: 0, pe: 0, banker: 0, strategic: 0, internal: 0 };
+        QUIZ.forEach(function (q) {
+          var ai = quizAnswers[q.key];
+          if (ai !== undefined) {
+            var opt = q.options[ai];
+            if (opt) Object.keys(opt.scores).forEach(function (k) { scores[k] += opt.scores[k]; });
+          }
+        });
+        var sorted = Object.keys(scores).map(function (k) { return [k, scores[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+        return { scores: scores, sorted: sorted, top: sorted[0][0] };
+      }
+      function quizComplete() { return QUIZ.every(function (q) { return quizAnswers[q.key] !== undefined; }); }
+      function routeById(id) { for (var i = 0; i < ROUTES.length; i++) if (ROUTES[i].id === id) return ROUTES[i]; return ROUTES[0]; }
+      function esc(s) {
+        return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      }
+      function el(id) { return document.getElementById(id); }
+
+      /* ---------------- Tabs ---------------- */
+      var TABS = [
+        { id: "overview", label: "Overview" },
+        { id: "valuation", label: "Valuation" },
+        { id: "readiness", label: "Checklist" },
+        { id: "routes", label: "Exit Routes" },
+        { id: "vault", label: "Doc Vault" }
+      ];
+      var currentTab = "overview";
+      function renderTabs() {
+        var done = tasks.filter(function (t) { return t.status === "done"; }).length;
+        el("tabNav").innerHTML = TABS.map(function (t) {
+          var label = t.id === "readiness" ? "Checklist " + done + "/" + tasks.length : t.label;
+          return '<button type="button" class="tab-btn" data-tab="' + t.id + '"' + (currentTab === t.id ? ' aria-current="page"' : "") + ">" + esc(label) + "</button>";
+        }).join("");
+        Array.prototype.forEach.call(el("tabNav").querySelectorAll("[data-tab]"), function (b) {
+          b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); });
+        });
+      }
+      function setTab(id) {
+        currentTab = id;
+        TABS.forEach(function (t) { el("tab-" + t.id).hidden = t.id !== id; });
+        renderTabs();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      /* ---------------- Rendering ---------------- */
+      function renderHero() {
+        var pill = pillars(profile);
+        var mult = multipleRange(profile);
+        el("heroTitle").textContent = profile.company_name
+          ? profile.company_name + " — are you actually ready to sell?"
+          : "Your HVAC company — are you actually ready to sell?";
+        el("heroScore").textContent = pill.overall;
+        el("heroScoreBar").style.width = pill.overall + "%";
+        el("heroScoreNote").textContent = pill.overall >= 75
+          ? "Buyer-ready range — focus on process & price."
+          : pill.overall >= 50 ? "Sellable, but leaving money on the table."
+          : "Prep mode — a few fixes move the multiple a lot.";
+        if (mult.earnings > 0) {
+          el("heroValEmpty").hidden = true;
+          el("heroValFull").hidden = false;
+          el("heroValRange").textContent = money(mult.earnings * mult.low) + " – " + money(mult.earnings * mult.high);
+          el("heroValNote").textContent = moneyFull(mult.earnings) + " earnings × " + mult.low + "–" + mult.high + "× • Educational estimate, not an appraisal. See the Valuation tab for what moves it.";
+        } else {
+          el("heroValEmpty").hidden = false;
+          el("heroValFull").hidden = true;
+        }
+        var next = tasks.filter(function (t) { return t.status !== "done" && t.impact === "High"; }).slice(0, 3);
+        el("heroNext").innerHTML = next.length
+          ? next.map(function (t) { return "<li>" + esc(t.title) + "</li>"; }).join("")
+          : "<li>Checklist complete — you’re in process mode.</li>";
+      }
+      function renderPillars() {
+        var pill = pillars(profile);
+        el("pillarGrid").innerHTML = pill.list.map(function (p) {
+          var cls = p.score >= 70 ? "good" : p.score >= 45 ? "mid" : "bad";
+          return '<div class="pillar"><div class="pillar-top"><p class="pillar-name">' + esc(p.label) + '</p><p class="pillar-score display">' + p.score + '</p></div>' +
+            '<div class="bar"><div class="' + cls + '" style="width:' + p.score + '%"></div></div>' +
+            '<p class="pillar-hint">' + esc(p.hint) + "</p></div>";
+        }).join("");
+      }
+      function renderValuation() {
+        var mult = multipleRange(profile);
+        if (mult.earnings > 0) {
+          el("valStats").innerHTML =
+            '<div class="stat-grid">' +
+            '<div class="stat"><p class="stat-label">Earnings base</p><p class="stat-big display">' + moneyFull(mult.earnings) + '</p><p class="stat-note">' + (profile.ebitda ? "Using your EBITDA" : "Using owner cash flow / SDE") + "</p></div>" +
+            '<div class="stat"><p class="stat-label">Multiple range</p><p class="stat-big display">' + mult.low + "× – " + mult.high + '×</p><p class="stat-note">Adjusted for recurring %, growth, GM, owner hours &amp; concentration from your snapshot</p></div>' +
+            '<div class="stat dark"><p class="stat-label">Indicative enterprise value</p><p class="stat-big display">' + money(mult.earnings * mult.low) + " – " + money(mult.earnings * mult.high) + '</p><p class="stat-note">Before debt, cash, working-capital adjustment, taxes &amp; fees</p></div>' +
+            "</div>";
+        } else {
+          el("valStats").innerHTML =
+            '<div class="empty-box"><p style="font-weight:800">No earnings entered yet</p>' +
+            '<p class="lede">Go to Overview and add EBITDA or owner cash flow — your range calculates instantly.</p>' +
+            '<button class="btn-navy" type="button" data-goto="overview">Add my numbers</button></div>';
+          bindGoto();
+        }
+      }
+      function renderChecklist() {
+        var done = tasks.filter(function (t) { return t.status === "done"; }).length;
+        var doing = tasks.filter(function (t) { return t.status === "in_progress"; }).length;
+        el("checklistSummary").textContent = done + " done • " + doing + " in progress • Tap a status to update it.";
+        var pct = tasks.length ? Math.round(done / tasks.length * 100) : 0;
+        el("checklistPct").textContent = pct + "%";
+        el("checklistBar").style.width = pct + "%";
+        var cats = [];
+        tasks.forEach(function (t) { if (cats.indexOf(t.category) === -1) cats.push(t.category); });
+        el("checklistBody").innerHTML = cats.map(function (cat) {
+          var items = tasks.map(function (t, i) { return { t: t, i: i }; }).filter(function (x) { return x.t.category === cat; });
+          return '<h3 class="cat-title">' + esc(cat) + "</h3>" + items.map(function (x) {
+            var t = x.t;
+            return '<div class="item' + (t.status === "done" ? " done" : "") + '"><div class="item-flex">' +
+              '<div class="item-main"><p class="item-title">' + esc(t.title) + (t.impact === "High" ? '<span class="impact">HIGH IMPACT</span>' : "") + '</p><p class="item-desc">' + esc(t.description) + "</p>" +
+              (t.custom ? '<button type="button" class="remove-btn" data-remove="' + x.i + '">Remove custom item</button>' : "") + "</div>" +
+              '<div class="seg" role="group" aria-label="Status for ' + esc(t.title) + '">' +
+              [["not_started", "To do", "sel-todo"], ["in_progress", "Doing", "sel-doing"], ["done", "Done", "sel-done"]].map(function (s) {
+                return '<button type="button" data-task="' + x.i + '" data-status="' + s[0] + '" aria-pressed="' + (t.status === s[0]) + '"' + (t.status === s[0] ? ' class="' + s[2] + '"' : "") + ">" + s[1] + "</button>";
+              }).join("") + "</div></div></div>";
+          }).join("");
+        }).join("");
+        Array.prototype.forEach.call(el("checklistBody").querySelectorAll("[data-task]"), function (b) {
+          b.addEventListener("click", function () {
+            tasks[Number(b.getAttribute("data-task"))].status = b.getAttribute("data-status");
+            refresh();
+          });
+        });
+        Array.prototype.forEach.call(el("checklistBody").querySelectorAll("[data-remove]"), function (b) {
+          b.addEventListener("click", function () {
+            tasks.splice(Number(b.getAttribute("data-remove")), 1);
+            refresh();
+          });
+        });
+      }
+      function renderVault() {
+        var ready = docs.filter(function (d) { return d.status === "ready"; }).length;
+        el("vaultSummary").textContent = ready + " of " + docs.length + " ready";
+        el("vaultBar").style.width = (docs.length ? ready / docs.length * 100 : 0) + "%";
+        var cats = [];
+        docs.forEach(function (d) { if (cats.indexOf(d.category) === -1) cats.push(d.category); });
+        el("vaultBody").innerHTML = cats.map(function (cat) {
+          var items = docs.map(function (d, i) { return { d: d, i: i }; }).filter(function (x) { return x.d.category === cat; });
+          return '<h3 class="cat-title">' + esc(cat) + "</h3>" + items.map(function (x) {
+            var d = x.d;
+            return '<div class="item' + (d.status === "ready" ? " done" : "") + '"><div class="item-flex">' +
+              '<div class="item-main"><p class="item-title">' + esc(d.name) + '</p><p class="item-desc">' + esc(d.why) + "</p></div>" +
+              '<div class="seg" role="group" aria-label="Status for ' + esc(d.name) + '">' +
+              ["missing", "requested", "ready"].map(function (s) {
+                var cls = s === "ready" ? "sel-done" : s === "requested" ? "sel-doing" : "sel-todo";
+                return '<button type="button" data-doc="' + x.i + '" data-status="' + s + '" aria-pressed="' + (d.status === s) + '"' + (d.status === s ? ' class="' + cls + '"' : "") + ">" + s + "</button>";
+              }).join("") + "</div></div></div>";
+          }).join("");
+        }).join("");
+        Array.prototype.forEach.call(el("vaultBody").querySelectorAll("[data-doc]"), function (b) {
+          b.addEventListener("click", function () {
+            docs[Number(b.getAttribute("data-doc"))].status = b.getAttribute("data-status");
+            refresh();
+          });
+        });
+      }
+      function renderQuiz() {
+        el("quizBody").innerHTML = QUIZ.map(function (q, qi) {
+          return '<fieldset class="quiz-q"><legend>' + (qi + 1) + ". " + esc(q.q) + '</legend><div class="chips">' +
+            q.options.map(function (o, oi) {
+              return '<button type="button" class="chip' + (quizAnswers[q.key] === oi ? " sel" : "") + '" data-quiz="' + q.key + '" data-opt="' + oi + '" aria-pressed="' + (quizAnswers[q.key] === oi) + '">' + esc(o.label) + "</button>";
+            }).join("") + "</div></fieldset>";
+        }).join("");
+        Array.prototype.forEach.call(el("quizBody").querySelectorAll("[data-quiz]"), function (b) {
+          b.addEventListener("click", function () {
+            quizAnswers[b.getAttribute("data-quiz")] = Number(b.getAttribute("data-opt"));
+            renderQuiz();
+          });
+        });
+        if (quizComplete()) {
+          var res = quizResult();
+          var max = Math.max(1, res.sorted[0][1]);
+          el("quizResult").hidden = false;
+          el("quizResultName").textContent = routeById(res.top).name;
+          el("quizScores").innerHTML = res.sorted.map(function (kv) {
+            return '<div class="score-row"><span class="name">' + esc(routeById(kv[0]).name) + '</span><div class="score-track"><div style="width:' + Math.min(100, kv[1] / max * 100) + '%"></div></div><span class="val">' + kv[1] + "</span></div>";
+          }).join("");
+        } else {
+          el("quizResult").hidden = true;
+        }
+        renderRouteCards();
+      }
+      function renderRouteCards() {
+        var top = quizComplete() ? quizResult().top : null;
+        el("routeCards").innerHTML = ROUTES.map(function (r) {
+          return '<article class="route-card"><div class="route-head"><div><h3 class="display">' + esc(r.name) + '</h3><p class="route-tag">' + esc(r.tag) + "</p></div>" +
+            (top === r.id ? '<span class="fit-badge">YOUR BEST FIT</span>' : "") + "</div>" +
+            '<p class="route-best">' + esc(r.bestFor) + "</p>" +
+            '<div class="route-facts">' +
+            '<div class="fact"><p class="fact-label">Fees</p><p>' + esc(r.fees) + "</p></div>" +
+            '<div class="fact"><p class="fact-label">Timeline</p><p>' + esc(r.timeline) + "</p></div>" +
+            '<div class="fact"><p class="fact-label">Confidentiality / Stay</p><p>' + esc(r.confidentiality) + "<br>" + esc(r.stay) + "</p></div>" +
+            "</div>" +
+            '<div class="route-lists"><div><p class="head good">Pros</p><ul>' + r.pros.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + '</ul></div>' +
+            '<div><p class="head bad">Watch out</p><ul>' + r.cons.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div></div></article>";
+        }).join("");
+      }
+      function renderBands() {
+        el("bandList").innerHTML = BANDS.map(function (r) {
+          return '<div class="band-row"><span style="font-weight:700">' + esc(r[0]) + '</span><span class="band-mult display">' + esc(r[1]) + '</span><span class="band-note">' + esc(r[2]) + "</span></div>";
+        }).join("");
+      }
+      function renderBools() {
+        el("boolGrid").innerHTML = BOOLS.map(function (b) {
+          var on = !!profile[b.key];
+          return '<button type="button" class="bool-btn' + (on ? " on" : "") + '" data-bool="' + b.key + '" aria-pressed="' + on + '"><span class="row"><span>' + esc(b.label) + '</span><span class="state">' + (on ? "✓ Yes" : "○ No") + '</span></span><span class="hint">' + esc(b.hint) + "</span></button>";
+        }).join("");
+        Array.prototype.forEach.call(el("boolGrid").querySelectorAll("[data-bool]"), function (btn) {
+          btn.addEventListener("click", function () {
+            var k = btn.getAttribute("data-bool");
+            profile[k] = !profile[k];
+            renderBools();
+            renderHero(); renderPillars(); renderValuation();
+          });
+        });
+      }
+      function bindGoto() {
+        Array.prototype.forEach.call(document.querySelectorAll("[data-goto]"), function (b) {
+          if (b.getAttribute("data-bound")) return;
+          b.setAttribute("data-bound", "1");
+          b.addEventListener("click", function () { setTab(b.getAttribute("data-goto")); });
+        });
+      }
+      function refresh() {
+        renderHero(); renderPillars(); renderValuation();
+        renderChecklist(); renderVault(); renderTabs();
+      }
+
+      /* ---------------- Form wiring ---------------- */
+      NUM_FIELDS.forEach(function (key) {
+        el("f_" + key).addEventListener("input", function (e) {
+          profile[key] = Number(e.target.value) || 0;
+          renderHero(); renderPillars(); renderValuation();
+        });
+      });
+      el("f_company_name").addEventListener("input", function (e) { profile.company_name = e.target.value; renderHero(); });
+      el("f_location").addEventListener("input", function (e) { profile.location = e.target.value; });
+      el("f_exit_goal").addEventListener("input", function (e) { profile.exit_goal = e.target.value; });
+      el("f_timeline").addEventListener("change", function (e) { profile.timeline = e.target.value; });
+      el("snapshotForm").addEventListener("submit", function (e) { e.preventDefault(); });
+
+      var titleInput = el("newTaskTitle");
+      titleInput.addEventListener("input", function () { el("addTaskBtn").disabled = !titleInput.value.trim(); });
+      el("addTaskBtn").addEventListener("click", function () {
+        var title = titleInput.value.trim();
+        if (!title) return;
+        tasks.push({ category: el("newTaskCategory").value, title: title, description: el("newTaskDesc").value.trim(), impact: "Medium", status: "not_started", custom: true });
+        titleInput.value = ""; el("newTaskDesc").value = ""; el("addTaskBtn").disabled = true;
+        refresh();
+      });
+
+      /* ---------------- Init ---------------- */
+      renderTabs();
+      renderBools();
+      renderBands();
+      renderQuiz();
+      bindGoto();
+      refresh();
+    })();
+    </script>
+  </body>
+</html>
