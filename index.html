@@ -9,6 +9,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- UI library: daisyUI (Tailwind CSS component library, no-build CDN build) + Apache ECharts for the simulator chart -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
     <style>
       :root {
         color-scheme: light dark;
@@ -55,14 +58,17 @@
       }
       .display { font-family: "Archivo", system-ui, sans-serif; }
       button { font-family: inherit; cursor: pointer; }
-      input, select { font-family: inherit; font-size: 16px; }
+      input, select, textarea { font-family: inherit; font-size: 16px; }
       :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      a { color: var(--accent-ink); }
 
-      main { max-width: 1024px; margin: 0 auto; padding: 16px 16px 96px; }
+      main { max-width: 1060px; margin: 0 auto; padding: 16px 16px 96px; }
 
       /* ---------- Hero ---------- */
       .hero {
-        background: var(--navy);
+        background:
+          radial-gradient(720px 300px at 85% -60px, rgba(217,108,39,.28), transparent 60%),
+          linear-gradient(160deg, var(--navy-soft), var(--navy) 55%);
         color: #fff;
         border-radius: 24px;
         overflow: hidden;
@@ -82,15 +88,27 @@
         letter-spacing: -0.01em;
       }
       @media (min-width: 640px) { .hero h1 { font-size: 38px; } }
-      .hero-sub { margin: 10px 0 0; max-width: 640px; font-size: 14.5px; line-height: 1.6; color: #c3d2e0; }
+      .hero-sub { margin: 10px 0 0; max-width: 660px; font-size: 14.5px; line-height: 1.6; color: #c3d2e0; }
       .hero-grid { display: grid; gap: 12px; margin-top: 22px; }
       @media (min-width: 760px) { .hero-grid { grid-template-columns: 1fr 1fr 1fr; } }
-      .hero-card { background: rgba(255,255,255,.09); border-radius: 16px; padding: 16px; }
-      .hero-card.accent { background: var(--accent); }
+      .hero-card { background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.08); border-radius: 16px; padding: 16px; }
+      .hero-card.accent { background: var(--accent); border-color: transparent; }
       .hero-card-label { margin: 0; font-size: 11.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #b9c9d9; }
       .hero-card.accent .hero-card-label { color: #ffe3cf; }
+      .hero-score-row { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
+      .ring {
+        --p: 26;
+        width: 74px; height: 74px; border-radius: 50%; flex-shrink: 0;
+        background: conic-gradient(var(--accent) calc(var(--p) * 1%), rgba(255,255,255,.18) 0);
+        display: grid; place-items: center;
+      }
+      .ring-inner {
+        width: 58px; height: 58px; border-radius: 50%;
+        background: var(--navy); display: grid; place-items: center;
+        font-size: 21px; font-weight: 900; line-height: 1;
+      }
+      .ring-inner small { font-size: 10px; color: #b9c9d9; font-weight: 700; display: block; text-align: center; }
       .hero-big { margin: 6px 0 0; font-size: 40px; font-weight: 900; line-height: 1; }
-      .hero-big small { font-size: 17px; color: #b9c9d9; font-weight: 700; }
       .hero-val { margin: 8px 0 0; font-size: 24px; font-weight: 900; line-height: 1.15; }
       @media (min-width: 640px) { .hero-val { font-size: 27px; } }
       .hero-note { margin: 8px 0 0; font-size: 12.5px; line-height: 1.55; color: #b9c9d9; }
@@ -104,6 +122,7 @@
         background: #fff; color: var(--navy);
         padding: 9px 14px; font-size: 13px; font-weight: 800;
       }
+      .hero-cta.ghost { background: rgba(255,255,255,.14); color: #fff; margin-left: 8px; }
       .tabs {
         display: flex; flex-wrap: wrap; gap: 4px;
         background: rgba(0,0,0,.22); padding: 8px 10px;
@@ -122,7 +141,6 @@
       }
       @media (min-width: 640px) { .panel { padding: 26px; } }
       .panel h2 { margin: 0; font-size: 21px; font-weight: 800; line-height: 1.25; }
-      .panel h3.sub { margin: 0 0 4px; font-size: 13px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
       .lede { margin: 6px 0 0; font-size: 14.5px; color: var(--dim); line-height: 1.6; }
       .tryit {
         margin-top: 16px; border: 1.5px dashed var(--accent); border-radius: 14px;
@@ -130,6 +148,22 @@
         background: color-mix(in srgb, var(--accent) 7%, var(--surface));
       }
       .tryit strong { color: var(--accent-ink); }
+      .kicker-sm { margin: 0 0 4px; font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-ink); }
+
+      /* ---------- How it works strip ---------- */
+      .steps { display: grid; gap: 12px; margin-top: 24px; }
+      @media (min-width: 760px) { .steps { grid-template-columns: 1fr 1fr 1fr; } }
+      .step {
+        background: var(--surface); border-radius: 18px; padding: 16px; box-shadow: var(--shadow);
+        display: flex; gap: 12px; align-items: flex-start; text-align: left; border: 0; color: var(--text); width: 100%;
+      }
+      .step-num {
+        width: 34px; height: 34px; border-radius: 12px; flex-shrink: 0;
+        background: var(--navy); color: #fff; font-weight: 900; display: grid; place-items: center; font-size: 16px;
+      }
+      @media (prefers-color-scheme: dark) { .step-num { background: var(--accent); color: #1c1005; } }
+      .step h3 { margin: 0; font-size: 15.5px; font-weight: 800; }
+      .step p { margin: 3px 0 0; font-size: 13.5px; color: var(--dim); line-height: 1.5; }
 
       /* ---------- Form ---------- */
       .form-grid { display: grid; gap: 16px; margin-top: 18px; }
@@ -176,6 +210,16 @@
       .bar .good { background: var(--green); } .bar .mid { background: #d99a26; } .bar .bad { background: #cf4438; }
       .pillar-hint { margin: 8px 0 0; font-size: 12.5px; color: var(--dim); line-height: 1.5; }
 
+      /* ---------- Roadmap ---------- */
+      .roadmap { display: grid; gap: 12px; margin-top: 18px; }
+      @media (min-width: 760px) { .roadmap { grid-template-columns: 1fr 1fr; } }
+      @media (min-width: 1020px) { .roadmap { grid-template-columns: 1fr 1fr 1fr 1fr; } }
+      .phase { border: 1px solid var(--border); border-radius: 16px; padding: 16px; background: var(--surface2); }
+      .phase-when { margin: 0; font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); }
+      .phase h3 { margin: 5px 0 0; font-size: 16px; font-weight: 800; }
+      .phase ul { margin: 8px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.55; color: var(--dim); }
+      .phase li { margin-top: 3px; }
+
       /* ---------- Valuation ---------- */
       .stat-grid { display: grid; gap: 12px; margin-top: 20px; }
       @media (min-width: 760px) { .stat-grid { grid-template-columns: 1fr 1fr 1fr; } }
@@ -207,8 +251,10 @@
       @media (min-width: 640px) { .band-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; } }
       .band-mult { font-weight: 900; color: var(--accent-ink); white-space: nowrap; }
       .band-note { color: var(--dim); }
-      @media (min-width: 640px) { .band-note { max-width: 380px; text-align: right; } }
+      @media (min-width: 640px) { .band-note { max-width: 400px; text-align: right; } }
       .fine { margin-top: 12px; font-size: 12.5px; color: var(--dim); line-height: 1.55; }
+      .src-list { margin: 10px 0 0; padding-left: 18px; font-size: 13px; color: var(--dim); line-height: 1.6; }
+      .src-list li { margin-top: 4px; }
 
       /* ---------- Checklist & vault ---------- */
       .progress-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px; }
@@ -231,7 +277,7 @@
         padding: 2px 8px; font-size: 10.5px; font-weight: 800; letter-spacing: .04em;
       }
       .item-desc { margin: 5px 0 0; font-size: 14px; color: var(--dim); line-height: 1.55; }
-      .seg { display: flex; gap: 5px; flex-shrink: 0; }
+      .seg { display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap; }
       .seg button {
         border: 1px solid var(--border); background: var(--surface); color: var(--dim);
         border-radius: 99px; padding: 7px 12px; font-size: 12.5px; font-weight: 700; text-transform: capitalize;
@@ -263,7 +309,7 @@
       .result-kicker { margin: 0; font-size: 11.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #f2a56b; }
       .result h3 { margin: 6px 0 0; font-size: 25px; font-weight: 900; line-height: 1.2; }
       .score-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; font-size: 14px; }
-      .score-row .name { flex: 0 0 168px; font-weight: 600; }
+      .score-row .name { flex: 0 0 190px; font-weight: 600; }
       @media (max-width: 480px) { .score-row .name { flex-basis: 118px; font-size: 13px; } }
       .score-track { flex: 1; height: 8px; border-radius: 99px; background: rgba(255,255,255,.2); overflow: hidden; }
       .score-track > div { height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s ease; }
@@ -275,6 +321,7 @@
       .route-card h3 { margin: 0; font-size: 20px; font-weight: 800; }
       .route-tag { margin: 2px 0 0; font-size: 14px; font-weight: 700; color: var(--accent-ink); }
       .fit-badge { background: var(--green); color: #fff; border-radius: 99px; padding: 5px 12px; font-size: 11.5px; font-weight: 800; letter-spacing: .03em; }
+      .method-badge { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); color: var(--accent-ink); border-radius: 99px; padding: 5px 12px; font-size: 11.5px; font-weight: 800; }
       .route-best { margin: 10px 0 0; font-size: 14.5px; line-height: 1.6; }
       .route-facts { display: grid; gap: 10px; margin-top: 14px; }
       @media (min-width: 760px) { .route-facts { grid-template-columns: 1fr 1fr 1fr; } }
@@ -288,10 +335,211 @@
       .route-lists ul { margin: 6px 0 0; padding-left: 20px; line-height: 1.55; }
       .route-lists li { margin-top: 3px; }
 
+      /* ---------- AI simulator ---------- */
+      .ai-summary { display: grid; gap: 12px; margin-top: 20px; }
+      @media (min-width: 760px) { .ai-summary { grid-template-columns: 1fr 1fr 1fr 1fr; } }
+      .ai-summary .stat.dark2 { background: var(--accent); color: #fff; }
+      .ai-summary .stat.dark2 .stat-label, .ai-summary .stat.dark2 .stat-note { color: #ffe3cf; }
+      #aiChart { width: 100%; height: 260px; margin-top: 18px; }
+      .chart-fallback { margin-top: 18px; display: grid; gap: 10px; }
+      .cf-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+      .cf-row .cf-name { flex: 0 0 150px; font-weight: 700; }
+      .cf-track { flex: 1; height: 22px; border-radius: 8px; background: var(--border); overflow: hidden; }
+      .cf-track > div { height: 100%; background: var(--navy); }
+      .cf-track > div.ai { background: var(--accent); }
+      .cf-row .cf-val { font-weight: 800; min-width: 70px; text-align: right; }
+      .lever {
+        margin-top: 14px; border: 1px solid var(--border); border-radius: 18px; padding: 18px;
+        background: var(--surface2);
+      }
+      .lever.off { opacity: .62; }
+      .lever-top { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
+      .lever h3 { margin: 0; font-size: 17px; font-weight: 800; line-height: 1.3; }
+      .lever-stat { margin: 6px 0 0; font-size: 13.5px; color: var(--dim); line-height: 1.55; }
+      .lever-stat strong { color: var(--text); }
+      .lever-toggle { display: flex; align-items: center; gap: 8px; flex-shrink: 0; font-size: 13px; font-weight: 800; }
+      .lever-controls { display: grid; gap: 6px; margin-top: 14px; }
+      @media (min-width: 640px) { .lever-controls { grid-template-columns: 1fr auto; align-items: center; gap: 16px; } }
+      .lever-slider-label { font-size: 13px; font-weight: 700; color: var(--dim); display: flex; justify-content: space-between; gap: 8px; }
+      .lever-slider-label output { color: var(--text); font-weight: 900; }
+      input[type="range"].sim-range { width: 100%; accent-color: var(--accent); height: 28px; }
+      .lever-out { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+      .lever-chip {
+        background: var(--surface); border: 1px solid var(--border); border-radius: 99px;
+        padding: 6px 12px; font-size: 13px; font-weight: 700;
+      }
+      .lever-chip strong { color: var(--accent-ink); }
+      .lever-chip.green strong { color: var(--green); }
+      .lever-assump { margin: 10px 0 0; font-size: 12.5px; color: var(--dim); line-height: 1.5; }
+      .margin-box { margin-top: 18px; border: 2px solid color-mix(in srgb, var(--accent) 55%, var(--border)); border-radius: 16px; padding: 16px 18px; background: var(--surface2); }
+      .margin-box h3 { margin: 0; font-size: 16px; font-weight: 800; }
+      .margin-row { display: grid; gap: 6px; margin-top: 12px; }
+      @media (min-width: 640px) { .margin-row { grid-template-columns: 1fr auto; align-items: center; gap: 16px; } }
+      .sba-grid { display: grid; gap: 10px; margin-top: 14px; }
+      @media (min-width: 640px) { .sba-grid { grid-template-columns: 1fr 1fr; } }
+      .sba-item { background: var(--surface2); border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.55; }
+      .sba-item strong { display: block; margin-bottom: 2px; }
+
+      /* ---------- Help / rolodex / report ---------- */
+      .help-grid { display: grid; gap: 12px; margin-top: 18px; }
+      @media (min-width: 640px) { .help-grid { grid-template-columns: 1fr 1fr; } }
+      @media (min-width: 960px) { .help-grid { grid-template-columns: 1fr 1fr 1fr; } }
+      .help-card { border: 1px solid var(--border); background: var(--surface2); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; }
+      .help-card h3 { margin: 0; font-size: 16px; font-weight: 800; }
+      .help-card p { margin: 6px 0 0; font-size: 13.5px; color: var(--dim); line-height: 1.55; flex: 1; }
+      .btn-intro {
+        margin-top: 12px; align-self: flex-start; border: 1px solid var(--accent); color: var(--accent-ink);
+        background: var(--surface); border-radius: 10px; padding: 8px 13px; font-size: 13px; font-weight: 800;
+      }
+      .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+      .btn-primary { border: 0; border-radius: 12px; background: var(--accent); color: #fff; padding: 12px 18px; font-size: 14.5px; font-weight: 800; }
+      .btn-secondary { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); padding: 12px 18px; font-size: 14.5px; font-weight: 800; }
+      .report-box {
+        margin-top: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface2);
+        padding: 14px 16px; font-size: 13.5px; line-height: 1.65; white-space: pre-wrap; max-height: 300px; overflow: auto;
+      }
+      .svc-list { margin: 10px 0 0; padding-left: 20px; font-size: 14.5px; line-height: 1.6; }
+      .svc-list li { margin-top: 4px; }
+      .phase2 { border: 1.5px dashed var(--border); border-radius: 16px; padding: 16px; margin-top: 16px; font-size: 14px; line-height: 1.6; }
+      .phase2 h3 { margin: 0 0 6px; font-size: 15.5px; }
+      .phase2 ul { margin: 6px 0 0; padding-left: 20px; color: var(--dim); }
+
+
+      /* ---------- Journey (single scrolling page) ---------- */
+      .sticky-nav {
+        position: sticky; top: 0; z-index: 60; margin-top: 14px;
+        background: color-mix(in srgb, var(--navy) 96%, transparent);
+        border-radius: 16px; box-shadow: var(--shadow); padding: 10px 12px;
+      }
+      .sticky-progress {
+        display: block; text-align: center; font-size: 11.5px; font-weight: 800;
+        letter-spacing: .12em; text-transform: uppercase; color: #f2a56b; margin-bottom: 8px;
+      }
+      .sticky-links { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+      .sticky-link {
+        border: 0; border-radius: 99px; padding: 7px 12px; display: inline-flex; align-items: center; gap: 7px;
+        font-size: 13.5px; font-weight: 700; color: #dbe6f0; background: rgba(255,255,255,.10);
+      }
+      .sticky-link .sticky-num {
+        width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+        background: rgba(255,255,255,.18); font-size: 12px; font-weight: 900; flex-shrink: 0;
+      }
+      .sticky-link[aria-current="true"] { background: #fff; color: var(--navy); }
+      .sticky-link[aria-current="true"] .sticky-num { background: var(--accent); color: #fff; }
+      /* Each step is its own framed panel — full-width header band, visible border,
+         and a gap of page background between frames so steps never blur together. */
+      .journey-section {
+        scroll-margin-top: 158px;
+        background: var(--surface);
+        border: 2px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+        border-radius: 28px;
+        box-shadow: 0 2px 6px rgba(18,42,63,.07), 0 16px 40px rgba(18,42,63,.10);
+        margin-top: 44px;
+        padding-bottom: 22px;
+        overflow: hidden;
+      }
+      @media (min-width: 760px) { .journey-section { scroll-margin-top: 104px; } }
+      @media (prefers-color-scheme: dark) {
+        .journey-section { box-shadow: 0 2px 6px rgba(0,0,0,.35), 0 16px 40px rgba(0,0,0,.30); }
+      }
+      /* Full-width step header band — edge to edge, left to right */
+      .step-banner {
+        background: linear-gradient(100deg, #c85a1a 0%, var(--accent) 55%, #e87f36 100%);
+        color: #fff;
+        padding: 20px 20px 18px;
+        border-bottom: 3px solid color-mix(in srgb, var(--accent) 70%, #7a3405);
+      }
+      @media (min-width: 640px) { .step-banner { padding: 24px 26px 20px; } }
+      .step-banner-top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+      .step-banner-kicker {
+        background: rgba(255,255,255,.24); color: #fff; border: 1px solid rgba(255,255,255,.35);
+        border-radius: 99px; padding: 5px 11px;
+        font-size: 11.5px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;
+      }
+      .step-banner-title {
+        font-family: "Archivo", system-ui, sans-serif;
+        font-size: 27px; font-weight: 900; line-height: 1.1; letter-spacing: -.01em;
+      }
+      @media (min-width: 640px) { .step-banner-title { font-size: 32px; } }
+      .step-banner-note { margin: 8px 0 0; font-size: 14.5px; line-height: 1.55; color: rgba(255,255,255,.94); max-width: 760px; }
+      /* Inner content sits inset inside the frame; panels become sub-cards */
+      .journey-section > *:not(.step-banner) { margin-left: 14px; margin-right: 14px; }
+      @media (min-width: 640px) { .journey-section > *:not(.step-banner) { margin-left: 20px; margin-right: 20px; } }
+      .journey-section .panel {
+        border: 1px solid var(--border);
+        background: var(--surface2);
+        box-shadow: none;
+        margin-top: 18px;
+      }
+      .journey-section .panel .pillar,
+      .journey-section .panel .phase,
+      .journey-section .panel .stat,
+      .journey-section .panel .item,
+      .journey-section .panel .fact,
+      .journey-section .panel .sba-item,
+      .journey-section .panel .help-card,
+      .journey-section .panel .lever { background: var(--surface); }
+      .journey-section .panel .stat.dark { background: var(--navy); }
+      .journey-section .panel .ai-summary .stat.dark2 { background: var(--accent); }
+      .journey-section .panel .input-wrap,
+      .journey-section .panel .plain-input,
+      .journey-section .panel .bool-btn { background: var(--surface); }
+      .journey-section .panel .primary-box { background: var(--surface); }
+      .journey-section .panel .margin-box { background: var(--surface); }
+      .journey-section .panel .detail-group { background: var(--surface); }
+      .journey-section .route-card { border: 1px solid var(--border); background: var(--surface2); box-shadow: none; }
+      .journey-section .route-card .fact { background: var(--surface); }
+      /* Keep legacy classes harmless if any remain */
+      .step-head { display: none; }
+      .step-pill { background: var(--accent); color: #fff; border-radius: 99px; padding: 6px 14px; font-size: 12.5px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+      .step-head-note { font-size: 14px; font-weight: 600; color: var(--dim); }
+      .continue-row {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+        margin-top: 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 18px; padding: 16px 18px; box-shadow: none;
+      }
+      .continue-btn {
+        border: 0; border-radius: 12px; background: var(--accent); color: #fff;
+        padding: 13px 20px; font-size: 15px; font-weight: 800;
+      }
+      .continue-note { font-size: 13.5px; color: var(--dim); line-height: 1.5; flex: 1 1 220px; }
+      .snapshot-instruction {
+        margin-top: 16px; border-radius: 14px; padding: 13px 15px; font-size: 14.5px; line-height: 1.6;
+        background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+        border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+      }
+      .btn-sample {
+        display: inline-block; margin-top: 10px; border: 0; border-radius: 10px;
+        background: var(--navy); color: #fff; padding: 10px 16px; font-size: 14px; font-weight: 800;
+      }
+      @media (prefers-color-scheme: dark) { .btn-sample { background: var(--accent); color: #1c1005; } }
+      .primary-box {
+        margin-top: 18px; border: 2px solid color-mix(in srgb, var(--accent) 55%, var(--border));
+        border-radius: 18px; padding: 18px; background: var(--surface2);
+      }
+      .primary-box h3 { margin: 0; font-size: 17px; font-weight: 800; }
+      .primary-box .primary-sub { margin: 4px 0 0; font-size: 13.5px; color: var(--dim); line-height: 1.55; }
+      .primary-grid { display: grid; gap: 16px; margin-top: 16px; }
+      @media (min-width: 640px) { .primary-grid { grid-template-columns: 1fr 1fr; } }
+      .primary-field .field-label { font-size: 12.5px; color: var(--text); }
+      .primary-field .input-wrap { background: var(--surface); border-width: 1.5px; }
+      .primary-field .input-wrap input { font-size: 19px; font-weight: 700; padding: 13px 0; }
+      .primary-field .field-hint { font-size: 13px; }
+      .detail-group {
+        margin-top: 18px; border: 1.5px dashed var(--border); border-radius: 18px; padding: 4px 18px 18px;
+      }
+      .detail-group summary { cursor: pointer; padding: 14px 0 4px; list-style-position: outside; }
+      .detail-title { font-size: 16px; font-weight: 800; }
+      .detail-sub { display: block; margin-top: 3px; font-size: 13.5px; color: var(--dim); line-height: 1.5; font-weight: 400; }
+      .detail-body { padding-bottom: 2px; }
       footer { margin-top: 34px; text-align: center; font-size: 12.5px; color: var(--dim); line-height: 1.6; padding: 0 8px; }
       [hidden] { display: none !important; }
       @media (prefers-reduced-motion: reduce) {
         .meter > div, .bar > div, .progress-bar > div, .score-track > div { transition: none; }
+      }
+      @media print {
+        .sticky-nav, .continue-row, .hero-cta, .btn-row, .seg, .add-box { display: none !important; }
+        body { background: #fff; }
+        .panel, .route-card { box-shadow: none; border: 1px solid #ccc; }
       }
     </style>
   </head>
@@ -302,19 +550,21 @@
         <div class="hero-body">
           <p class="hero-kicker">HVAC Acquisition Prep</p>
           <h1 class="display" id="heroTitle">Your HVAC company — are you actually ready to sell?</h1>
-          <p class="hero-sub">Most owners find out what buyers will discount <em>after</em> the LOI. This flips that: enter your real numbers, fix the leaks that kill multiples, and pick the exit route that fits your size and goals — before anyone sees your books.</p>
+          <p class="hero-sub">Most owners find out what buyers will discount <em>after</em> the LOI. This flips that: enter your real numbers, see what your shop could sell for, model how AI fixes move that price in dollars, and pick from every way a company like yours actually changes hands — before anyone sees your books.</p>
           <div class="hero-grid">
             <div class="hero-card">
               <p class="hero-card-label">Readiness score</p>
-              <p class="hero-big display"><span id="heroScore">26</span><small> /100</small></p>
+              <div class="hero-score-row">
+                <div class="ring" id="heroRing"><div class="ring-inner"><span><span id="heroScore">26</span><small>/100</small></span></div></div>
+                <p class="hero-note" id="heroScoreNote" style="margin:0">Prep mode — a few fixes move the multiple a lot.</p>
+              </div>
               <div class="meter"><div id="heroScoreBar" style="width:26%"></div></div>
-              <p class="hero-note" id="heroScoreNote">Prep mode — a few fixes move the multiple a lot.</p>
             </div>
             <div class="hero-card">
               <p class="hero-card-label">Indicative value range</p>
               <div id="heroValEmpty">
-                <p class="hero-val display">Add EBITDA below</p>
-                <p class="hero-note">Enter EBITDA or owner cash flow in your snapshot and your range appears here instantly.</p>
+                <p class="hero-val display">Add earnings below</p>
+                <p class="hero-note">Enter EBITDA — or owner cash flow / SDE for a smaller shop — in your snapshot and your range appears here instantly.</p>
               </div>
               <div id="heroValFull" hidden>
                 <p class="hero-val display" id="heroValRange"></p>
@@ -324,65 +574,101 @@
             <div class="hero-card accent">
               <p class="hero-card-label">Your next 3 highest-impact moves</p>
               <ul class="hero-next" id="heroNext"></ul>
-              <button class="hero-cta" type="button" data-goto="readiness">Open checklist →</button>
+              <button class="hero-cta" type="button" data-goto="readiness">Jump to Step 5 — Prep ↓</button>
+              <button class="hero-cta ghost" type="button" data-goto="ai">Jump to Step 3 — AI simulator ↓</button>
             </div>
           </div>
         </div>
-        <nav class="tabs" aria-label="Sections" id="tabNav"></nav>
       </section>
 
+      <!-- STICKY JOURNEY NAV -->
+      <nav class="sticky-nav" id="stickyNav" aria-label="Your journey">
+        <span class="sticky-progress" id="stickyProgress">Step 1 of 6 — Snapshot</span>
+        <div class="sticky-links">
+          <button type="button" class="sticky-link" data-scroll="section-snapshot" aria-current="true"><span class="sticky-num">1</span>Snapshot</button>
+          <button type="button" class="sticky-link" data-scroll="section-value"><span class="sticky-num">2</span>Your Value</button>
+          <button type="button" class="sticky-link" data-scroll="section-ai"><span class="sticky-num">3</span>Grow the Value</button>
+          <button type="button" class="sticky-link" data-scroll="section-routes"><span class="sticky-num">4</span>Your Sale Path</button>
+          <button type="button" class="sticky-link" data-scroll="section-prep"><span class="sticky-num">5</span>Prep <span id="prepCount"></span></button>
+          <button type="button" class="sticky-link" data-scroll="section-help"><span class="sticky-num">6</span>Get Help</button>
+        </div>
+      </nav>
+
+      <!-- HOW IT WORKS -->
+      <div class="steps" aria-label="How this page works">
+        <div class="step"><span class="step-num display">1</span><span><h3>Start at the top — Step 1</h3><p>Enter just 5 numbers. Your score and value range update live as you type — nothing to submit.</p></span></div>
+        <div class="step"><span class="step-num display">2</span><span><h3>Keep scrolling down</h3><p>One page, in order: your value, how AI grows it, your sale path, and your prep work. Use the bar above to jump — nothing is hidden.</p></span></div>
+        <div class="step"><span class="step-num display">3</span><span><h3>Finish at Get Help</h3><p>Download your report, or ask Selenko for help and introductions to the advisors a good exit takes.</p></span></div>
+      </div>
+
       <!-- OVERVIEW -->
-      <div id="tab-overview">
+      <section class="journey-section" id="section-snapshot" data-step="1">
+        <div class="step-banner"><div class="step-banner-top"><span class="step-banner-kicker">Step 1 of 6</span><span class="step-banner-title">Snapshot</span></div><p class="step-banner-note">Start here — this drives everything below it.</p></div>
+
         <section class="panel">
-          <h2 class="display">1 — Your business snapshot</h2>
-          <p class="lede">Rough is fine to start. These numbers drive your score, valuation range, and route fit, and everything updates live as you type.</p>
-          <div class="tryit"><strong>Just looking?</strong> Try a sample shop: revenue $2,400,000 · EBITDA $420,000 · growth 8% · recurring 28% · 620 agreements · 9 techs · 14 employees · owner 45 hrs/week · top customer 12% — then flip on “Has a GM” and “Monthly financial close” and watch the score and value range move.</div>
+          <h2 class="display">Your business snapshot</h2>
+          <p class="lede">Rough is fine to start. These numbers drive your score, valuation range, route fit, and the AI simulator — everything updates live as you type.</p>
+          <div class="snapshot-instruction"><strong>What to do:</strong> fill in the <strong>5 numbers in the first box below</strong> — rough guesses are fine. As you type, your <strong>readiness score and value range at the top of this page update live</strong>. There is nothing to submit, and every step below uses these same numbers.</div>
+          <div class="tryit"><strong>Just looking?</strong> Try a sample shop: revenue $2,400,000 · EBITDA $420,000 · growth 8% · recurring 28% · 620 agreements · 9 techs · 14 employees · owner 45 hrs/week · top customer 12% — then flip on “Has a GM” and “Monthly financial close,” and watch the score and value range move. Then scroll down to Step 3 and toggle the missed-call lever.<br /><button class="btn-sample" type="button" id="fillSampleBtn">Fill in this sample shop for me →</button></div>
           <form id="snapshotForm" autocomplete="off">
-            <div class="form-grid">
-              <label class="field"><span class="field-label">Company name</span>
-                <input class="plain-input" id="f_company_name" type="text" placeholder="e.g. Smith Air &amp; Heat" /></label>
-              <label class="field"><span class="field-label">Market / city &amp; state</span>
-                <input class="plain-input" id="f_location" type="text" placeholder="e.g. Tampa, FL" /></label>
-              <label class="field"><span class="field-label">Annual revenue (last 12 mo)</span>
-                <span class="input-wrap"><span class="affix">$</span><input id="f_annual_revenue" type="number" inputmode="numeric" min="0" placeholder="0" /></span></label>
-              <label class="field"><span class="field-label">EBITDA (normalized)</span>
-                <span class="input-wrap"><span class="affix">$</span><input id="f_ebitda" type="number" inputmode="numeric" min="0" placeholder="0" /></span>
-                <span class="field-hint">Profit after a market salary for the owner/GM. If unsure, use owner cash flow below.</span></label>
-              <label class="field"><span class="field-label">Owner cash flow / SDE</span>
-                <span class="input-wrap"><span class="affix">$</span><input id="f_owner_cash_flow" type="number" inputmode="numeric" min="0" placeholder="0" /></span>
-                <span class="field-hint">EBITDA + owner salary, benefits, personal add-backs. Brokers use this for smaller shops.</span></label>
-              <label class="field"><span class="field-label">Years in business</span>
-                <span class="input-wrap"><input id="f_years_in_business" type="number" inputmode="numeric" min="0" placeholder="0" /></span></label>
-              <label class="field"><span class="field-label">Revenue growth last year</span>
-                <span class="input-wrap"><input id="f_growth_rate_pct" type="number" inputmode="decimal" placeholder="0" /><span class="affix">%</span></span></label>
-              <label class="field"><span class="field-label">Recurring / agreement revenue</span>
-                <span class="input-wrap"><input id="f_recurring_pct" type="number" inputmode="numeric" min="0" max="100" placeholder="0" /><span class="affix">%</span></span>
-                <span class="field-hint">Share of revenue from maintenance agreements &amp; recurring service.</span></label>
-              <label class="field"><span class="field-label">Residential share</span>
-                <span class="input-wrap"><input id="f_residential_pct" type="number" inputmode="numeric" min="0" max="100" placeholder="0" /><span class="affix">%</span></span></label>
-              <label class="field"><span class="field-label">Active maintenance agreements</span>
-                <span class="input-wrap"><input id="f_maintenance_agreements" type="number" inputmode="numeric" min="0" placeholder="0" /></span></label>
-              <label class="field"><span class="field-label">Technicians (field)</span>
-                <span class="input-wrap"><input id="f_tech_count" type="number" inputmode="numeric" min="0" placeholder="0" /></span></label>
-              <label class="field"><span class="field-label">Total employees</span>
-                <span class="input-wrap"><input id="f_total_employees" type="number" inputmode="numeric" min="0" placeholder="0" /></span></label>
-              <label class="field"><span class="field-label">Owner hours / week in the business</span>
-                <span class="input-wrap"><input id="f_owner_hours_per_week" type="number" inputmode="numeric" min="0" placeholder="0" /></span>
-                <span class="field-hint">The single best predictor of owner-dependence discount.</span></label>
-              <label class="field"><span class="field-label">Top customer share of revenue</span>
-                <span class="input-wrap"><input id="f_top_customer_pct" type="number" inputmode="numeric" min="0" max="100" placeholder="0" /><span class="affix">%</span></span></label>
+            <div class="primary-box">
+              <h3 class="display">Start here — the 5 numbers that matter most</h3>
+              <p class="primary-sub">These five drive your score, your value range, and your sale-path fit. Everything else on this page is refinement.</p>
+              <div class="primary-grid">
+                <label class="field primary-field"><span class="field-label">1 · Annual revenue (last 12 mo)</span>
+                  <span class="input-wrap"><span class="affix">$</span><input id="f_annual_revenue" type="number" inputmode="numeric" min="0" placeholder="0" /></span>
+                  <span class="field-hint"><strong>Why buyers care:</strong> it sets your size band — and which buyers (broker, SBA, PE) are realistic for you.</span></label>
+                <label class="field primary-field"><span class="field-label">2 · EBITDA (normalized)</span>
+                  <span class="input-wrap"><span class="affix">$</span><input id="f_ebitda" type="number" inputmode="numeric" min="0" placeholder="0" /></span>
+                  <span class="field-hint"><strong>Why buyers care:</strong> profit after a market salary for the owner/GM. Larger and PE-track shops price on this. If unsure, use owner cash flow instead.</span></label>
+                <label class="field primary-field"><span class="field-label">3 · Owner cash flow / SDE</span>
+                  <span class="input-wrap"><span class="affix">$</span><input id="f_owner_cash_flow" type="number" inputmode="numeric" min="0" placeholder="0" /></span>
+                  <span class="field-hint"><strong>Why buyers care:</strong> EBITDA + owner salary, benefits, personal add-backs. Owner-operated shops price on SDE — at a lower multiple, because SDE is the bigger number.</span></label>
+                <label class="field primary-field"><span class="field-label">4 · Recurring / agreement revenue</span>
+                  <span class="input-wrap"><input id="f_recurring_pct" type="number" inputmode="numeric" min="0" max="100" placeholder="0" /><span class="affix">%</span></span>
+                  <span class="field-hint"><strong>Why buyers care:</strong> share of revenue from maintenance agreements &amp; recurring service. 50%+ is where premium multiples start.</span></label>
+                <label class="field primary-field"><span class="field-label">5 · Owner hours / week in the business</span>
+                  <span class="input-wrap"><input id="f_owner_hours_per_week" type="number" inputmode="numeric" min="0" placeholder="0" /></span>
+                  <span class="field-hint"><strong>Why buyers care:</strong> owner dependence is the #1 multiple killer — worth roughly 0.5–1.0× when the business runs through you.</span></label>
+              </div>
             </div>
-            <div class="bool-grid" id="boolGrid"></div>
-            <div class="form-grid">
-              <label class="field"><span class="field-label">When are you thinking of selling?</span>
-                <select class="plain-input" id="f_timeline">
-                  <option>Just exploring</option><option>Under 6 months</option><option>6-12 months</option><option>12-24 months</option><option>2-3 years</option>
-                </select></label>
-              <label class="field"><span class="field-label">What does a great exit look like for you?</span>
-                <input class="plain-input" id="f_exit_goal" type="text" placeholder="e.g. Retire, keep the name, take care of my techs" /></label>
-            </div>
+            <details class="detail-group" id="detailGroup">
+              <summary><span class="detail-title">Add detail — sharpens your estimate</span><span class="detail-sub">Optional, about 2 more minutes: company details, growth, residential/commercial mix, agreements, team size, customer concentration, whether you have a GM / CRM / monthly close, and your timeline. Tap to open.</span></summary>
+              <div class="detail-body">
+                <div class="form-grid">
+                  <label class="field"><span class="field-label">Company name</span>
+                    <input class="plain-input" id="f_company_name" type="text" placeholder="e.g. Smith Air &amp; Heat" /></label>
+                  <label class="field"><span class="field-label">Market / city &amp; state</span>
+                    <input class="plain-input" id="f_location" type="text" placeholder="e.g. Tampa, FL" /></label>
+                  <label class="field"><span class="field-label">Years in business</span>
+                    <span class="input-wrap"><input id="f_years_in_business" type="number" inputmode="numeric" min="0" placeholder="0" /></span></label>
+                  <label class="field"><span class="field-label">Revenue growth last year</span>
+                    <span class="input-wrap"><input id="f_growth_rate_pct" type="number" inputmode="decimal" placeholder="0" /><span class="affix">%</span></span></label>
+                  <label class="field"><span class="field-label">Residential share</span>
+                    <span class="input-wrap"><input id="f_residential_pct" type="number" inputmode="numeric" min="0" max="100" placeholder="0" /><span class="affix">%</span></span>
+                    <span class="field-hint">The rest is commercial / light-commercial. Mix changes which buyers compete for you.</span></label>
+                  <label class="field"><span class="field-label">Active maintenance agreements</span>
+                    <span class="input-wrap"><input id="f_maintenance_agreements" type="number" inputmode="numeric" min="0" placeholder="0" /></span></label>
+                  <label class="field"><span class="field-label">Technicians (field)</span>
+                    <span class="input-wrap"><input id="f_tech_count" type="number" inputmode="numeric" min="0" placeholder="0" /></span></label>
+                  <label class="field"><span class="field-label">Total employees</span>
+                    <span class="input-wrap"><input id="f_total_employees" type="number" inputmode="numeric" min="0" placeholder="0" /></span></label>
+                  <label class="field"><span class="field-label">Top customer share of revenue</span>
+                    <span class="input-wrap"><input id="f_top_customer_pct" type="number" inputmode="numeric" min="0" max="100" placeholder="0" /><span class="affix">%</span></span></label>
+                </div>
+                <div class="bool-grid" id="boolGrid"></div>
+                <div class="form-grid">
+                  <label class="field"><span class="field-label">When are you thinking of selling?</span>
+                    <select class="plain-input" id="f_timeline">
+                      <option>Just exploring</option><option>Under 6 months</option><option>6-12 months</option><option>12-24 months</option><option>2-3 years</option>
+                    </select></label>
+                  <label class="field"><span class="field-label">What does a great exit look like for you?</span>
+                    <input class="plain-input" id="f_exit_goal" type="text" placeholder="e.g. Retire, keep the name, take care of my techs" /></label>
+                </div>
+              </div>
+            </details>
           </form>
-          <p class="session-note">Everything on this page runs in your browser for this visit only — nothing you enter is sent anywhere or saved, and it clears when you close or reload the page.</p>
+          <p class="session-note">Everything on this page runs in your browser for this visit only — nothing you enter is sent anywhere or saved, and it clears when you close or reload the page. When you want a copy, download or email yourself the report from Step 6 — Get Help, at the bottom of this page.</p>
         </section>
 
         <section class="panel">
@@ -390,13 +676,64 @@
           <p class="lede">Six pillars acquirers actually diligence. Weak pillars don’t just lower price — they add earn-outs, holdbacks, and “seller must stay” conditions.</p>
           <div class="pillar-grid" id="pillarGrid"></div>
         </section>
-      </div>
+
+        <section class="panel">
+          <p class="kicker-sm">The 12–18 month runway</p>
+          <h2 class="display">Prep done early is worth real money</h2>
+          <p class="lede">Serious prep typically takes 12–18 months — and it’s the highest-return work in the whole sale: cleaning up owner dependence, books, and hidden liabilities routinely adds far more to proceeds than it costs. Here’s the order buyers wish you’d done it in.</p>
+          <div class="roadmap">
+            <div class="phase">
+              <p class="phase-when">18–12 months out</p>
+              <h3 class="display">Clean the foundation</h3>
+              <ul>
+                <li>Normalize owner comp &amp; build the add-backs schedule</li>
+                <li>Start a monthly close — buyers need the trend, not a snapshot</li>
+                <li>Commission a sell-side Quality of Earnings review</li>
+                <li>Entity, tax &amp; license cleanup while there’s time to fix it</li>
+              </ul>
+            </div>
+            <div class="phase">
+              <p class="phase-when">12–6 months out</p>
+              <h3 class="display">De-risk the operation</h3>
+              <ul>
+                <li>Install or empower a GM; start the owner-away test</li>
+                <li>Audit the fleet replacement cliff &amp; permit backlog</li>
+                <li>Retention plan for top techs, documented in writing</li>
+                <li>Grow around any customer over 10% of revenue</li>
+              </ul>
+            </div>
+            <div class="phase">
+              <p class="phase-when">6–3 months out</p>
+              <h3 class="display">Grow what buyers pay for</h3>
+              <ul>
+                <li>Push maintenance agreements &amp; renewal rates up</li>
+                <li>Turn on the AI levers — recovered jobs show up in trailing earnings</li>
+                <li>Mine the unsold-estimate file; clean the CRM export</li>
+                <li>Assemble the diligence vault before anyone asks</li>
+              </ul>
+            </div>
+            <div class="phase">
+              <p class="phase-when">Final 90 days</p>
+              <h3 class="display">Go to market ready</h3>
+              <ul>
+                <li>Pick the route (Step 4, below) and interview at least two advisors or buyers</li>
+                <li>NDAs before financials; stage the data room</li>
+                <li>Model after-tax proceeds: asset vs stock, seller note, working capital</li>
+                <li>Keep running the business — a diligence dip re-prices deals</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+        <div class="continue-row"><button class="continue-btn" type="button" data-goto="valuation">Continue to Step 2 — Your Value ↓</button><span class="continue-note">Next: what a buyer would likely pay for the shop you just described, and why it comes out as a range.</span></div>
+      </section>
 
       <!-- VALUATION -->
-      <div id="tab-valuation" hidden>
+      <section class="journey-section" id="section-value" data-step="2">
+        <div class="step-banner"><div class="step-banner-top"><span class="step-banner-kicker">Step 2 of 6</span><span class="step-banner-title">Your Value</span></div><p class="step-banner-note">The indicative range, and what moves it.</p></div>
+
         <section class="panel">
           <h2 class="display">What your shop could sell for — and why it’s a range</h2>
-          <p class="lede">HVAC deals are priced on normalized earnings × a multiple. The multiple is not magic: it rises with recurring agreements, clean monthly books, a GM who runs the day, and growth — and falls with owner-dependence, install-only revenue, and customer concentration. This is an educational starting range, not a formal valuation or Quality of Earnings review.</p>
+          <p class="lede">HVAC deals are priced on normalized earnings × a multiple. Which earnings matters: owner-operated shops sell on <strong>SDE</strong> (owner cash flow); managed, larger shops sell on <strong>EBITDA</strong>. Mixing the two up is the most common valuation mistake owners make — SDE is a bigger number priced at a smaller multiple. The multiple itself rises with recurring agreements, clean monthly books, a GM who runs the day, and growth — and falls with owner dependence, install-only revenue, and customer concentration. Educational starting range, not a formal valuation.</p>
           <div id="valStats"></div>
           <div class="duo">
             <div class="up-box">
@@ -411,26 +748,103 @@
             </div>
             <div class="down-box">
               <h3>↓ Moves it down (or adds an earn-out)</h3>
+              <p style="margin:6px 0 0; font-size:13px; line-height:1.5">Earn-out note: only ~5% of HVAC deals include a formal earn-out — it is negotiable, not standard.</p>
               <ul>
                 <li>Owner is lead tech, lead salesperson &amp; dispatcher in one</li>
                 <li>One builder/GC is 25%+ of revenue</li>
                 <li>Cash jobs, personal expenses through the business, tax-time-only books</li>
                 <li>License held only by the exiting owner</li>
-                <li>Aging fleet with big capex due in year one</li>
+                <li>Aging fleet with big capex due in year one — the “fleet cliff”</li>
+                <li>Open permits, EPA/refrigerant exposure, unsold-estimate file nobody works</li>
               </ul>
             </div>
           </div>
-          <div class="warn-box"><strong>Before you quote a price to anyone:</strong> get a CPA/broker market valuation and, for larger deals, a Quality of Earnings review. A buyer will do one — you want to see your numbers through their eyes first. Also model after-tax proceeds: asset vs stock sale, seller-note risk, and working capital can swing what you keep by 15–30%.</div>
+          <div class="warn-box"><strong>Before you quote a price to anyone:</strong> get a CPA/broker market valuation and, for larger deals, a sell-side Quality of Earnings review. A buyer will do one — you want to see your numbers through their eyes first. Also model after-tax proceeds: asset vs stock sale, seller-note risk, and working capital can swing what you keep by 15–30%.<br /><strong>Earn-out reality check:</strong> only ~5% of HVAC deals include a formal earn-out; it is negotiable, not standard — do not let a buyer present one as automatic.</div>
         </section>
         <section class="panel">
-          <h2 class="display">Size bands buyers talk in (rule of thumb)</h2>
+          <h2 class="display">Size bands buyers talk in (2025–26 cross-check)</h2>
           <div id="bandList" style="margin-top:10px"></div>
-          <p class="fine">Bands are general educational ranges for residential/light-commercial HVAC and vary by market, mix, and deal terms — cash at close vs earn-out changes the real value of any headline multiple.</p>
+          <p class="fine">Bands are anchored to closed-deal data — Axial closed deals (Q3 2024–Q3 2026) and GF Data — not asking prices. Overall closed median across sizes is ~4.3× EBITDA; headline sector averages skew toward larger, disclosed deals, so a private sale of a typical shop lands lower. Cash at close vs earn-out also changes the real value of any headline multiple — and only ~5% of HVAC deals include a formal earn-out; it is negotiable, not standard.</p>
+          <h3 class="cat-title" style="margin-top:20px">Sources for the numbers on this page</h3>
+          <ul class="src-list">
+            <li><strong>Anchor — Axial closed deals, Q3 2024–Q3 2026</strong> (actual closings, published Sep 2026): overall closed median 4.3× EBITDA; under $1M EBITDA closed at a median of ~3.9× inside a 3.0–4.5× range. The bands on this page are anchored here.</li>
+            <li><strong>Anchor — GF Data</strong> (via CT Acquisitions, Jun 2026): $1–3M EBITDA at 4.0–6.0×; $3–5M inside the blended 5.5–8.0× band; $5–10M at ~7× central; $10M+ at 7.0–10.5× typical.</li>
+            <li>Secondary (kept as cross-checks, not anchors): <a href="https://saltcreekadvisory.com/articles/hvac-plumbing-valuation-multiples-2026" target="_blank" rel="noopener">Salt Creek Advisory (2026)</a> and <a href="https://ctacquisitions.com/sell-your-business/hvac/" target="_blank" rel="noopener">CT Acquisitions (2026)</a>. BizBuySell HVAC sales 2021–25 median ≈ 2.58× SDE sits inside the register SDE range of 2.0–3.5× for owner-operated shops.</li>
+            <li>Owner-dependence discount (0.5–1.0×), the fleet cliff, EPA/permit exposure, and the 12–18 month prep runway come from Selenko’s prior HVAC sale-prep engagement research.</li>
+          </ul>
         </section>
-      </div>
+        <div class="continue-row"><button class="continue-btn" type="button" data-goto="ai">Continue to Step 3 — Grow the Value ↓</button><span class="continue-note">Next: six AI fixes, each priced the way a buyer prices it — recovered jobs turned into dollars of sale price.</span></div>
+      </section>
+
+      <!-- AI VALUE SIMULATOR -->
+      <section class="journey-section" id="section-ai" data-step="3">
+        <div class="step-banner"><div class="step-banner-top"><span class="step-banner-kicker">Step 3 of 6</span><span class="step-banner-title">Grow the Value</span></div><p class="step-banner-note">Small leaks, priced like a buyer prices them.</p></div>
+
+        <section class="panel">
+          <p class="kicker-sm">The AI value simulator</p>
+          <h2 class="display">Small leaks, priced like a buyer prices them</h2>
+          <p class="lede">Buyers don’t pay for revenue — they pay for profit, times a multiple. So every lever below runs the same honest chain: <strong>recovered jobs → extra revenue → extra profit at incremental contribution margin → × your multiple → dollars of sale price</strong>. Incremental contribution margin (not gross margin) is deliberate: the trucks, techs, and office are already paid for, but fuel, parts, and commissions aren’t free. The default margin is <strong>15%</strong> — set it below. Headline gains are shown <strong>net of typical AI tool cost</strong>, with the gross figure alongside. Toggle levers, drag the sliders to match your shop, and watch the price move.</p>
+          <div class="margin-box">
+            <h3 class="display">Your incremental contribution margin — applies to every lever</h3>
+            <p class="primary-sub" style="margin:4px 0 0; font-size:13.5px; color:var(--dim); line-height:1.55">Default <strong>15%</strong>, adjustable from 10% to 25%. This is the share of each extra job’s ticket that actually becomes profit after fuel, parts, and commissions — never gross margin.</p>
+            <div class="margin-row"><div><div class="lever-slider-label"><span>Incremental contribution margin</span><output id="marginOut">15%</output></div><input type="range" class="sim-range" id="marginRange" min="10" max="25" step="1" value="15" aria-label="Incremental contribution margin, percent" /></div><span class="lever-chip">AI tool cost in the net view: <strong>$97/mo basic – $297/mo full</strong></span></div>
+            <p class="lever-assump">Net view subtracts one full-automation AI plan at $297/mo ($3,564/yr) whenever any lever is on — vendor-labelled plan pricing ($97/mo basic to $297/mo full, CallEntia / Briggs comparisons, 2026). One platform cost total, not per lever.</p>
+          </div>
+          <div class="warn-box" id="stackingNote"><strong>Shared-pool cap — no double counting:</strong> missed calls, speed-to-lead, and review-driven calls chase <em>the same lost customer</em>, so they draw on one shared lost-demand pool. The totals below cap their combined gain: the largest of the three counts in full, the second counts at half, and the third at a quarter — the same lost job is never counted twice. Each lever card still shows its stand-alone figure; the headline totals apply the cap.</div>
+          <div class="ai-summary" id="aiSummary"></div>
+          <p class="fine" id="stackingDetail" style="margin-top:10px"></p>
+          <div id="aiChart" role="img" aria-label="Chart comparing your current annual earnings with earnings after the AI levers you switched on"></div>
+          <div id="leverList"></div>
+          <div class="warn-box"><strong>How to read these numbers:</strong> they’re modeled ranges from published benchmarks and the assumptions printed under each lever — not a promise. Your real recovery depends on your call volume, market, and ticket mix. The point is the shape: one recovered job a day is not “one job” to a buyer — it’s that job’s profit, every year, multiplied. Verify your own missed-call count in your phone/CRM logs before quoting any of this.</div>
+          <h3 class="cat-title" style="margin-top:22px">Sources behind the levers</h3>
+          <ul class="src-list">
+            <li>Missed calls (all vendor-labelled): <strong>27% of calls to home-service businesses go unanswered</strong> (Invoca) — the app default miss rate; vendor-reported figures run higher, up to a 62% upper bound (BrightLocal 2024 via vendor aggregation), shown as a range top, never the default. A low-end ~14% figure from one CallRail 2025 study also exists and is labelled here as a low-end study figure only — the model does not use it. A missed HVAC call is worth <strong>$800–$1,200</strong>; <strong>85% of callers who don’t reach someone never call back</strong>; <strong>42% of service calls arrive outside 9–5</strong> (ServiceTitan Industry Report 2024). <a href="https://calljolt.com/missed-call-statistics" target="_blank" rel="noopener">Missed-call statistics roundup (CallJolt, 2026)</a>.</li>
+            <li>Booking intent: <strong>78% of customers who call are ready to book immediately</strong> (Podium Local Business Report 2024, vendor-labelled) — the booking-intent factor in the missed-call math. Recovery: the app default is <strong>40%</strong>, deliberately below vendor-reported AI capture of 40–70%, and it is applied explicitly — AI does not recover every missed call.</li>
+            <li>AI tool cost (vendor-labelled): answering / automation plans run <strong>$97/mo basic to $297/mo full</strong> (CallEntia pricing; Briggs comparison, 2026) — the cost subtracted in the net view.</li>
+            <li>Speed-to-lead: a lead contacted within 5 minutes is far more likely to qualify than one contacted at 30 minutes (Oldroyd / MIT Lead Response Management Study, via Harvard Business Review, 2011 — dated primary study), and 78% of customers buy from the first company to respond (vendor-labelled) — the basis for the 5-minute follow-up lever’s conservative +15-point booking lift.</li>
+          </ul>
+        </section>
+        <div class="continue-row"><button class="continue-btn" type="button" data-goto="routes">Continue to Step 4 — Your Sale Path ↓</button><span class="continue-note">Next: every way a company like yours changes hands — plus the liquidation floor — scored to your size, timeline, and goals.</span></div>
+      </section>
+
+      <!-- ROUTES -->
+      <section class="journey-section" id="section-routes" data-step="4">
+        <div class="step-banner"><div class="step-banner-top"><span class="step-banner-kicker">Step 4 of 6</span><span class="step-banner-title">Your Sale Path</span></div><p class="step-banner-note">Pick how you will sell before you prep for it.</p></div>
+
+        <section class="panel">
+          <h2 class="display">Every way an HVAC company actually changes hands — plus the floor</h2>
+          <p class="lede">“Auction” isn’t a buyer type — it’s a <em>method</em>: an advisor runs a structured competitive process (broad, limited to 10–50 buyers, or targeted) so buyers bid against each other instead of against you. It sits alongside the buyer routes below, and for the right size shop it was the recommended path in Selenko’s prior HVAC sale-prep work. At the bottom sits liquidation / asset sale — the honest floor every other price should beat. Answer the 6 questions and we’ll score every path to your size, timeline, and goals.</p>
+          <div id="quizBody"></div>
+          <div class="result" id="quizResult" hidden>
+            <p class="result-kicker">Your best-fit route right now</p>
+            <h3 class="display" id="quizResultName"></h3>
+            <div id="quizScores" style="margin-top:8px"></div>
+            <p class="fine">Use this as a starting conversation — then interview at least two advisors/buyers on that route before signing an exclusivity or LOI.</p>
+          </div>
+        </section>
+        <div id="routeCards"></div>
+        <section class="panel" id="sbaPanel">
+          <p class="kicker-sm">If an SBA buyer is your likely buyer</p>
+          <h2 class="display">SBA 7(a) rules that shape smaller sales — verified &amp; date-stamped</h2>
+          <p class="lede">Rules as of <strong>SOP 50 10 8, effective June 1, 2025</strong>. Note: <strong>SOP 50 10 8.1 took effect October 1, 2026 — re-check pending</strong>; confirm the current rules with your lender before relying on them.</p>
+          <div class="sba-grid">
+            <div class="sba-item"><strong>10% minimum equity injection</strong>At least 10% of total project cost (price + fees + working capital) must come in as buyer equity on a change of ownership.</div>
+            <div class="sba-item"><strong>Seller note: at most half the injection</strong>A seller note counts toward the injection only if it is ≤50% of the required injection and on full standby — no principal or interest — for the whole loan term (documented on SBA Form 155).</div>
+            <div class="sba-item"><strong>No phased buyouts</strong>No multi-step / phased partial buyouts. A single-step partial change is allowed only as a stock purchase.</div>
+            <div class="sba-item"><strong>Collateral above $50K</strong>Loans over $50,000 must be secured by all available collateral to the maximum extent possible.</div>
+            <div class="sba-item"><strong>Retained equity = a 2-year guarantee</strong>A seller who keeps any equity after a partial sale guarantees the full loan for at least 2 years after disbursement, whatever the stake size.</div>
+            <div class="sba-item"><strong>No SBSS screen as a current rule</strong>The old SBSS credit-score screen was retired March 1, 2026 — it is not a current SBA requirement and no SBSS figure is used on this page.</div>
+          </div>
+          <p class="fine">Source: U.S. Small Business Administration, SOP 50 10 document page (Version 8, eff. June 1, 2025; Version 8.1, eff. October 1, 2026) and SBA-lender law-firm summaries of SBA Information Notice 5000-866746.</p>
+        </section>
+        <div class="warn-box" style="border-radius:24px; margin-top:16px; box-shadow: var(--shadow);"><strong>Golden rules for any route:</strong> never sign a long exclusivity without a clear buyer list &amp; timeline; never share full financials before an NDA; never accept a headline price without asking how much is cash at close vs earn-out / seller note / rollover; and keep running the business — a revenue dip during diligence is the #1 reason deals get re-priced. On earn-outs specifically: only ~5% of HVAC deals include a formal earn-out; it is negotiable, not standard.</div>
+        <div class="continue-row"><button class="continue-btn" type="button" data-goto="readiness">Continue to Step 5 — Prep ↓</button><span class="continue-note">Next: the checklist and document vault that get you ready for whichever path you picked.</span></div>
+      </section>
 
       <!-- READINESS CHECKLIST -->
-      <div id="tab-readiness" hidden>
+      <section class="journey-section" id="section-prep" data-step="5">
+        <div class="step-banner"><div class="step-banner-top"><span class="step-banner-kicker">Step 5 of 6</span><span class="step-banner-title">Prep</span></div><p class="step-banner-note">The work that protects your price, in checklist order.</p></div>
+        <div id="section-checklist">
         <section class="panel">
           <div class="progress-head">
             <div>
@@ -458,25 +872,8 @@
         </section>
       </div>
 
-      <!-- ROUTES -->
-      <div id="tab-routes" hidden>
-        <section class="panel">
-          <h2 class="display">Route finder — answer 6 questions</h2>
-          <p class="lede">There’s no universally “best” route. The right one is the one that fits your size, timeline, and what you want life to look like the day after close.</p>
-          <div id="quizBody"></div>
-          <div class="result" id="quizResult" hidden>
-            <p class="result-kicker">Your best-fit route right now</p>
-            <h3 class="display" id="quizResultName"></h3>
-            <div id="quizScores" style="margin-top:8px"></div>
-            <p class="fine">Use this as a starting conversation — then interview at least two advisors/buyers on that route before signing an exclusivity or LOI.</p>
-          </div>
-        </section>
-        <div id="routeCards"></div>
-        <div class="warn-box" style="border-radius:24px; margin-top:16px; box-shadow: var(--shadow);"><strong>Golden rules for any route:</strong> never sign a long exclusivity without a clear buyer list &amp; timeline; never share full financials before an NDA; never accept a headline price without asking how much is cash at close vs earn-out / seller note / rollover; and keep running the business — a revenue dip during diligence is the #1 reason deals get re-priced.</div>
-      </div>
-
       <!-- VAULT -->
-      <div id="tab-vault" hidden>
+      <div id="section-vault">
         <section class="panel">
           <div class="progress-head">
             <div>
@@ -490,30 +887,107 @@
           <p class="fine" style="margin-top:24px">This checklist tracks readiness only — it doesn’t store the documents themselves. Keep originals in your CPA / data-room system and share them only under NDA, in stages.</p>
         </section>
       </div>
+        <div class="continue-row"><button class="continue-btn" type="button" data-goto="help">Continue to Step 6 — Get Help ↓</button><span class="continue-note">Last step: take your report with you, and line up the people a good exit takes.</span></div>
+      </section>
 
-      <footer>Educational prep tool — not a valuation, appraisal, or legal/tax advice. Talk to an HVAC-experienced CPA, M&amp;A attorney, and advisor before signing an LOI or listing agreement.</footer>
+      <!-- GET HELP / REPORT -->
+      <section class="journey-section" id="section-help" data-step="6">
+        <div class="step-banner"><div class="step-banner-top"><span class="step-banner-kicker">Step 6 of 6</span><span class="step-banner-title">Get Help</span></div><p class="step-banner-note">Your report, Selenko, and the rolodex.</p></div>
+
+        <section class="panel">
+          <p class="kicker-sm">Take it with you</p>
+          <h2 class="display">Your prep report</h2>
+          <p class="lede">A one-page summary of everything you’ve entered — score, value range, AI upside, best-fit route, and your open prep items. Download it, or email it to yourself (and a copy to Selenko if you’d like a second set of eyes).</p>
+          <div class="report-box" id="reportBox">Fill in your snapshot and your report builds itself here.</div>
+          <div class="btn-row">
+            <button class="btn-primary" type="button" id="downloadReportBtn">Download my report (.txt)</button>
+            <button class="btn-secondary" type="button" id="emailReportBtn">Email my report</button>
+          </div>
+          <p class="fine">Email opens your own mail app with the report pre-filled — nothing is sent or stored by this page.</p>
+        </section>
+
+        <section class="panel">
+          <p class="kicker-sm">Work with Selenko</p>
+          <h2 class="display">AI that shows up in your sale price</h2>
+          <p class="lede">Selenko builds the exact systems the simulator models — implemented in your shop, measured in recovered jobs, and documented so a buyer’s diligence team can see the trailing results:</p>
+          <ul class="svc-list">
+            <li><strong>AI answering &amp; booking</strong> — every call, email, and web lead answered in seconds, 24/7, booked straight into your dispatch board.</li>
+            <li><strong>Follow-up automation</strong> — unsold estimates, dormant customers, and agreement renewals worked systematically, not when someone remembers.</li>
+            <li><strong>Review &amp; reputation engine</strong> — every finished job turns into reviews that feed the next call.</li>
+            <li><strong>Sale-prep advisory</strong> — valuation cleanup, route selection, and introductions to the professionals below.</li>
+          </ul>
+          <form id="leadForm" autocomplete="off">
+            <div class="form-grid">
+              <label class="field"><span class="field-label">Your name</span>
+                <input class="plain-input" id="lead_name" type="text" placeholder="e.g. Mike Smith" /></label>
+              <label class="field"><span class="field-label">Email</span>
+                <input class="plain-input" id="lead_email" type="email" placeholder="you@company.com" /></label>
+              <label class="field"><span class="field-label">Phone (optional)</span>
+                <input class="plain-input" id="lead_phone" type="tel" placeholder="(555) 555-5555" /></label>
+              <label class="field"><span class="field-label">I want help with</span>
+                <select class="plain-input" id="lead_interest">
+                  <option>AI answering &amp; lead follow-up</option>
+                  <option>Preparing my company to sell</option>
+                  <option>An introduction (broker / PE / attorney / CPA)</option>
+                  <option>Not sure yet — just a conversation</option>
+                </select></label>
+            </div>
+            <label class="field" style="margin-top:12px"><span class="field-label">Anything we should know? (optional)</span>
+              <input class="plain-input" id="lead_msg" type="text" placeholder="e.g. $2.4M revenue, thinking of selling in 12–18 months" /></label>
+            <div class="btn-row">
+              <button class="btn-primary" type="submit" id="leadSendBtn">Ask Selenko for help</button>
+              <a class="btn-secondary" href="https://selenko.com" target="_blank" rel="noopener" style="text-decoration:none; display:inline-block">Visit selenko.com</a>
+            </div>
+            <p class="fine">“Ask Selenko” opens your mail app with your details and report summary pre-filled, addressed to Selenko — you review and press send. This page has no server and stores nothing.</p>
+          </form>
+        </section>
+
+        <section class="panel">
+          <p class="kicker-sm">The rolodex</p>
+          <h2 class="display">The team a good exit takes</h2>
+          <p class="lede">No single advisor does all of this well. These are the seats to fill — request an introduction and we’ll connect you with vetted options for your market and size. (Directory of named partners is being built out; introductions are made personally, not by a listing.)</p>
+          <div class="help-grid" id="rolodexGrid"></div>
+          <div class="phase2">
+            <h3 class="display">Coming in Phase 2</h3>
+            <p style="margin:0; color:var(--dim)">On the roadmap once this version proves out — planned, not yet live:</p>
+            <ul>
+              <li><strong>Your own account</strong> — save progress across visits and devices instead of starting fresh each session.</li>
+              <li><strong>Emailed reports</strong> — the full report delivered to your inbox automatically, no mail-app step.</li>
+              <li><strong>AI exit advisor chat</strong> — ask specific questions (“what does a buyer do with my fleet leases?”) and get answers drawn from the same research library behind this tool.</li>
+              <li><strong>Named partner directory</strong> — PE firms, brokers, M&amp;A attorneys, and QoE CPAs with direct contact paths.</li>
+            </ul>
+          </div>
+        </section>
+        <div class="continue-row"><button class="continue-btn" type="button" data-goto="overview">↑ Back to Step 1 — Snapshot</button><span class="continue-note">Want to change an answer? Everything on this page updates live — scroll back up and adjust any number.</span></div>
+      </section>
+
+      <footer>Educational prep tool — not a valuation, appraisal, or legal/tax advice. Talk to an HVAC-experienced CPA, M&amp;A attorney, and advisor before signing an LOI or listing agreement.<br />Interface: daisyUI (Tailwind CSS component library) · Charts: Apache ECharts · Numbers: sources cited on each page.</footer>
     </main>
 
     <script>
     (function () {
       "use strict";
 
-      /* ---------------- Data (same prep content as the full workspace) ---------------- */
+      /* ---------------- Data ---------------- */
       var DEFAULT_TASKS = [
         { category: "Financials", title: "Clean up 3 years of P&Ls", description: "Separate personal expenses, normalize owner comp, remove one-offs. Buyers and lenders will recast this anyway — do it first.", impact: "High" },
         { category: "Financials", title: "Build an add-backs schedule", description: "List owner salary above market, personal vehicle/insurance, one-time legal, family on payroll — with proof for each.", impact: "High" },
         { category: "Financials", title: "Move to monthly close in 15 days", description: "Monthly P&L + balance sheet, reviewed with CPA. No monthly financials = big discount in diligence.", impact: "High" },
+        { category: "Financials", title: "Commission a sell-side Quality of Earnings", description: "A QoE through a buyer's eyes, before a buyer runs theirs. Finds the add-backs that won't survive — while you can still fix them.", impact: "High" },
         { category: "Financials", title: "Tighten AR, AP & work-in-progress", description: "Age receivables, document WIP method, clean inventory counts for trucks and warehouse.", impact: "Medium" },
         { category: "Operations", title: "Document your dispatch & pricing playbook", description: "Flat-rate book, dispatch rules, callback/warranty process — in writing, not in the owner's head.", impact: "High" },
         { category: "Operations", title: "Prove maintenance agreements are real revenue", description: "Count active agreements, renewal rate, visits completed, and revenue per agreement. This is the multiple-maker.", impact: "High" },
+        { category: "Operations", title: "Audit the fleet replacement cliff", description: "List every truck's age, mileage, and lease end. A wall of replacements due in year one is priced like debt — surface it and plan it yourself first.", impact: "High" },
         { category: "Operations", title: "Reduce callbacks & warranty drag", description: "Track callback rate by tech, fix training gaps. Buyers ask for this in diligence.", impact: "Medium" },
         { category: "Team & Owner", title: "Install or empower a GM / ops manager", description: "Someone besides the owner who can run Tuesday without you. Test it with a 2-week owner-away sprint.", impact: "High" },
         { category: "Team & Owner", title: "Retention plan for top techs", description: "Document pay, certs, non-solicits where enforceable, and stay-bonus ideas. Techs walking = deal risk.", impact: "High" },
         { category: "Team & Owner", title: "Cut owner hours in dispatch & sales", description: "Track where owner time goes. Replace owner in estimates, escalations, and bookkeeping approvals step by step.", impact: "High" },
         { category: "Customers", title: "Fix customer concentration", description: "If one GC, builder, or property manager is >10% of revenue, grow around them or document contract durability.", impact: "High" },
         { category: "Customers", title: "Clean CRM & customer list", description: "Every customer, address, equipment age, last service, agreement status — exportable from ServiceTitan / Housecall Pro / etc.", impact: "Medium" },
+        { category: "Customers", title: "Mine the unsold-estimate file", description: "Every open estimate from the last 24 months, worked with systematic follow-up. It's found revenue now — and a buyer will ask why nobody worked it.", impact: "Medium" },
         { category: "Customers", title: "Collect reviews & prove reputation", description: "Google rating, review count, referral sources. PE platforms pay for a brand that generates its own leads.", impact: "Medium" },
         { category: "Legal & Risk", title: "Licenses, insurance & permits in order", description: "Contractor license, EPA certs, bonding, COIs, safety/OSHA logs — one folder, current dates.", impact: "Medium" },
+        { category: "Legal & Risk", title: "Clear the permit backlog & EPA exposure", description: "Pull and close open permits; document refrigerant handling and A2L-transition readiness. Unpermitted work surfaces in diligence and scares lenders.", impact: "High" },
         { category: "Legal & Risk", title: "Lease, fleet & debt inventory", description: "Truck titles/leases, equipment debt, building lease assignability, personal guarantees to unwind.", impact: "Medium" },
         { category: "Legal & Risk", title: "Entity & tax cleanup", description: "S-corp vs LLC structure, sales tax on parts, 1099 vs W-2 for helpers/subs, open permits — fix before LOI.", impact: "High" }
       ];
@@ -523,62 +997,75 @@
         { category: "Financials", name: "Business tax returns — 3 years", why: "Buyer/lender verifies revenue and add-backs here." },
         { category: "Financials", name: "Balance sheet — current + year-end", why: "Shows debt, AR, inventory buyers will price." },
         { category: "Financials", name: "Add-backs & owner comp schedule", why: "Turns messy SDE into defensible EBITDA." },
+        { category: "Financials", name: "Sell-side Quality of Earnings report", why: "For $1M+ EBITDA deals — pre-empts the buyer's QoE findings." },
         { category: "Operations", name: "Maintenance agreement roster & renewal rate", why: "Proves recurring revenue is contracted, not hoped for." },
         { category: "Operations", name: "Revenue by line: service / install / commercial", why: "Install-heavy vs service-heavy gets a very different multiple." },
         { category: "Operations", name: "Fleet & equipment list with age / mileage", why: "Capex needs can kill a price at the last minute." },
+        { category: "Operations", name: "Open permits & EPA / refrigerant compliance file", why: "Backlogs and refrigerant exposure are priced as risk." },
         { category: "Team", name: "Org chart + roster with tenure & pay bands", why: "Buyers are buying techs and dispatch as much as trucks." },
         { category: "Team", name: "Licenses, certs & training records", why: "License holder leaving is a top HVAC deal-breaker." },
         { category: "Legal", name: "Entity docs, leases & insurance binder", why: "Assignability and coverage are closing conditions." },
         { category: "Customers", name: "Top 20 customers by revenue (12 mo)", why: "Concentration is priced immediately." },
-        { category: "Customers", name: "CRM export — customers & equipment age", why: "Equipment age = future replacement pipeline a buyer can model." }
+        { category: "Customers", name: "CRM export — customers & equipment age", why: "Equipment age = future replacement pipeline a buyer can model." },
+        { category: "Customers", name: "Unsold-estimate file (last 24 months)", why: "Shows the follow-up opportunity — or the leak — in writing." }
       ];
 
       var ROUTES = [
         { id: "broker", name: "Business Broker", tag: "Most common for $500k–$5M revenue", bestFor: "Owner wants a managed sale, broad buyer pool, and help with SBA buyers & local operators.", fees: "Typically 8–12% on smaller deals (often with a minimum), paid at close", timeline: "6–12 months", confidentiality: "Moderate — listings are blind, but word can travel locally", stay: "Usually a short transition (30–90 days)", pros: ["Widest pool of individual & small-group buyers", "Handles valuation, listing, buyer screening, SBA loan process", "Good fit when EBITDA is under ~$750k"], cons: ["Quality varies hugely — interview 3", "Less reach into PE platforms", "Fees bite on smaller deals"] },
-        { id: "pe", name: "Direct to PE / HVAC Platform", tag: "Residential platforms are actively buying", bestFor: "$2M+ revenue, strong service/agreements, owner open to rollover equity or staying on.", fees: "No broker fee if truly direct — but price/leverage is on you", timeline: "3–7 months if they are motivated", confidentiality: "High at first — direct NDA conversations", stay: "Often 1–3 years, or rollover 20–40% equity", pros: ["No sell-side fee, often fastest credible close", "Can pay top multiples for agreements & techs", "Rollover can create a second, bigger exit"], cons: ["They do this weekly; you do it once — information gap", "Earn-outs & rollover shift risk back to you", "No market check means you may leave money on table"] },
-        { id: "banker", name: "M&A Advisor / Investment Banker", tag: "For $10M+ revenue or $1.5M+ EBITDA", bestFor: "Bigger, cleaner shops that want a competitive process among PE & strategics.", fees: "Retainer + 3–6% success fee (declining scale)", timeline: "7–12 months for a full process", confidentiality: "High — controlled, staged data room", stay: "Negotiated — often transition + possible rollover", pros: ["Creates real competition = price tension", "Runs diligence, QoE, and negotiation for you", "Best shot at premium multiple"], cons: ["Overkill / too expensive below scale", "Process is intense for owner & office staff", "Retainers due even if no sale"] },
+        { id: "auction", name: "Competitive Process / Auction", tag: "A method, not a buyer — advisor-run bidding", method: true, bestFor: "A sellable shop ($1M+ EBITDA, clean books) that wants buyers bidding against each other: broad (50+ buyers), limited (10–50), or targeted (a named handful). Run by an M&A advisor; this was the recommended route in Selenko's prior HVAC sale-prep engagement.", fees: "M&A advisor pricing applies — all-in 6–12%, including retainers of $3,000–$15,000/month (see M&A Advisor). The tension it creates is what pays for it", timeline: "7–12 months, run in defined rounds with bid deadlines", confidentiality: "High — staged teaser → NDA → CIM → IOIs → LOIs", stay: "Negotiated per winning bid", pros: ["Real competition = price tension no single negotiation creates", "Deadlines force buyers to sharpen pencils", "You compare cash / earn-out / rollover across live bids"], cons: ["Needs a business that survives scrutiny from many buyers at once", "A failed process can taint the shop — timing matters", "Most intense route for owner & office staff"] },
+        { id: "pe", name: "Direct to PE / HVAC Platform", tag: "Residential platforms are actively buying", bestFor: "$2M+ revenue, strong service/agreements, owner open to rollover equity or staying on.", fees: "No broker fee if truly direct — but price/leverage is on you", timeline: "3–7 months if they are motivated", confidentiality: "High at first — direct NDA conversations", stay: "Often 1–3 years, or rollover 20–40% equity", pros: ["No sell-side fee, often fastest credible close", "Can pay top multiples for agreements & techs", "Rollover can create a second, bigger exit"], cons: ["They do this weekly; you do it once — information gap", "Earn-outs & rollover shift risk back to you — and only ~5% of HVAC deals include a formal earn-out; it is negotiable, not standard", "No market check means you may leave money on table"] },
+        { id: "bolton", name: "PE Add-On / Bolt-On Acquisition", tag: "Sold into a platform already in your region", bestFor: "Smaller or mid-size shop in a market where a PE-backed platform needs density, techs, or agreements — you become their local add-on rather than a standalone platform.", fees: "Usually no sell-side fee if direct; advisor optional", timeline: "3–8 months", confidentiality: "High at first — direct conversations under NDA", stay: "Often stay on as branch leadership, or a defined transition", pros: ["Platforms pay for density & techs, not just profit", "Faster diligence — they know the trade cold", "Brand often survives as the local face"], cons: ["Price anchored to their add-on model, not a full market process", "Your upside rides on their platform's execution", "Integration can change culture quickly"] },
+        { id: "banker", name: "M&A Advisor / Investment Banker", tag: "For $10M+ revenue or $1.5M+ EBITDA", bestFor: "Bigger, cleaner shops that want a professionally run process among PE & strategics (often the competitive process above).", fees: "All-in 6–12% (success fee plus retainers of $3,000–$15,000/month; a minimum-fee floor of $150–250K is common)", timeline: "7–12 months for a full process", confidentiality: "High — controlled, staged data room", stay: "Negotiated — often transition + possible rollover", pros: ["Creates real competition = price tension", "Runs diligence, QoE, and negotiation for you", "Best shot at premium multiple"], cons: ["Overkill / too expensive below scale", "Process is intense for owner & office staff", "Retainers due even if no sale"] },
         { id: "strategic", name: "Strategic / Competitor Buyer", tag: "Regional shop, national brand, or adjacent trades", bestFor: "A known buyer wants your territory, agreements, or commercial accounts.", fees: "No fee if direct; advisor fee if you hire leverage", timeline: "3–9 months", confidentiality: "Lowest — your competitor learns your numbers if it dies", stay: "Varies — brand may be retired, team usually kept", pros: ["Synergies can justify a strong price", "Knows the market, diligence is practical", "Good home for team & customers"], cons: ["Highest leak / poaching risk if deal fails", "Single buyer = no tension, price can drift down", "Culture & brand often disappear"] },
-        { id: "internal", name: "Internal Sale / ESOP / GM Buyout", tag: "Legacy-first route", bestFor: "Trusted GM/family/second-in-command, owner prioritizes legacy & team over max price.", fees: "Legal + valuation + lender costs; ESOP setup is significant", timeline: "9–18 months to structure well", confidentiality: "Highest — stays inside the building", stay: "Gradual, on your terms — months to years", pros: ["Preserves name, team, and culture", "Seller note / SBA can make it financeable", "Most control over your exit pace"], cons: ["Usually below market price", "You carry financing risk for years", "Buyer depth is one person — if they balk, restart"] }
+        { id: "sba", name: "SBA-Financed Individual Buyer", tag: "An operator buys your shop with an SBA 7(a) loan", bestFor: "Profitable shops under ~$5M price where the natural buyer is a person — a GM from another market, a search-fund operator, or a tradesperson moving up. The most common real buyer for smaller shops.", fees: "Broker fee if listed (8–12%); no fee on a direct deal", timeline: "6–12 months including lender underwriting", confidentiality: "Moderate — lender & broker see everything, market sees a blind listing", stay: "Transition 3–12 months is often a lender expectation", pros: ["Deep pool — SBA lending makes buyers out of operators", "Cash-heavy at close (bank debt, not just a seller note)", "Your name & team usually stay — the buyer needs them"], cons: ["Price capped by what the loan underwrites (SDE discipline)", "Lender diligence is slow and paperwork-heavy", "Deal dies if the buyer's financing dies — screen hard"] },
+        { id: "search", name: "Search Fund / Entrepreneurship-Through-Acquisition", tag: "A backed buyer searching for one company to run", bestFor: "Owners who like the idea of a younger operator-owner (often investor-backed) buying and personally running the business for the long term.", fees: "Usually no sell-side fee if direct", timeline: "4–9 months", confidentiality: "High — one-to-one conversations", stay: "Flexible — often a genuine mentorship-style handover", pros: ["Buyer intends to run it, not flip it — legacy-friendly", "Investor backing makes financing credible", "Often values exactly what platforms discount: local brand & relationships"], cons: ["One buyer, one balance sheet — diligence on them matters", "Price typically at market, not premium", "Smaller pool — you may wait for the right searcher"] },
+        { id: "mbo", name: "GM / Management Buyout", tag: "Your own team buys the business", bestFor: "A trusted GM or leadership team with the skills to run it, financed with a mix of bank/SBA debt, seller note, and their own equity.", fees: "Legal + valuation + lender costs", timeline: "6–12 months to structure", confidentiality: "Highest — stays inside the building", stay: "Gradual, on your terms", pros: ["The buyers already know every customer and tech", "Preserves culture, name, and your legacy", "Seller note can earn you interest income for years"], cons: ["Usually at or below market price", "You carry part of the financing risk", "Mixing friendship and negotiation needs a good attorney"] },
+        { id: "esop", name: "ESOP — Sell to Your Employees", tag: "Employee Stock Ownership Plan", bestFor: "Owners with 15+ employees who prioritize legacy and team, and want the significant tax advantages an ESOP sale can offer.", fees: "Feasibility study + legal/valuation/trustee costs are significant ($100k+)", timeline: "9–18 months to establish and close", confidentiality: "High — announced internally on your timeline", stay: "Often gradual — many owners stay on for years", pros: ["Team literally becomes the owner — strongest legacy story", "Potential deferral of capital gains tax (C-corp §1042)", "Company contributions to the ESOP are tax-deductible"], cons: ["Complex & regulated — needs specialist advisors", "Price is set by independent appraisal, not auction tension", "Ongoing admin & trustee costs every year"] },
+        { id: "family", name: "Family Succession / Handover", tag: "Next generation takes the reins", bestFor: "A son, daughter, or family member already in (or entering) the business, with a structured buyout over time.", fees: "Estate/tax/legal planning costs", timeline: "1–5 years done properly", confidentiality: "Total — it's a family matter", stay: "As long as you want — often an advisory fade-out", pros: ["Maximum control over legacy, name, and pace", "Estate & gifting tools can be very tax-efficient", "No market process, no strangers in your books"], cons: ["Family dynamics are the diligence risk", "Price is often discounted — fairness vs family tension", "Needs a real buy-sell agreement, not a handshake"] },
+        { id: "recap", name: "Partial Sale / Recapitalization", tag: "Sell a slice, keep a slice (rollover)", bestFor: "Owners who want meaningful cash out now and a second, often bigger, bite later — selling 60–80% to PE while rolling the rest.", fees: "Advisor/broker fee on the sold portion if represented", timeline: "5–10 months", confidentiality: "High — direct, negotiated process", stay: "You stay — that's the point. Second exit typically in 3–7 years", pros: ["De-risks your personal balance sheet without leaving", "Second exit can exceed the first if the platform grows", "Partner brings capital, systems, and acquisition capacity"], cons: ["You have a boss/partner for the first time", "Minority stake later is harder to sell on your terms", "Governance documents matter enormously — lawyer up"] },
+        { id: "liquidation", name: "Liquidation / Asset Sale — the Floor", tag: "The honest baseline — not a recommendation", bestFor: "The floor option: if no buyer will pay for the earnings, the trucks, tools, inventory, and customer list are sold piecemeal and the entity is wound down. Every going-concern price above should beat this — if it doesn't, that's information, not a deal.", fees: "No verified fee % exists for trades liquidation — do not assume one; liquidator / auctioneer costs are quoted per engagement", timeline: "Weeks to a few months", confidentiality: "Low — a wind-down is visible to staff, customers & competitors", stay: "None — the business closes", pros: ["A real, knowable floor price for what the hard assets fetch", "Fast and final when a going-concern sale isn't achievable", "The baseline that makes a lowball offer easy to recognise"], cons: ["Almost always the lowest total recovery — earnings are worth nothing here", "No value for the name, agreements, or customer relationships", "Wind-down, tax & personal-guarantee cleanup still needs counsel"] },
+        { id: "hold", name: "Professionalize & Hold", tag: "Not a sale — build the asset buyers fight over", bestFor: "Owners 2–5 years out: install the GM, agreements, monthly books, and AI systems now, harvest higher cash flow today, and sell later into a higher band — or keep it as a family asset.", fees: "Investment in management & systems, not transaction fees", timeline: "Ongoing — reviewed yearly", confidentiality: "Total — nothing is on the market", stay: "You're building your own exit optionality", pros: ["Every fix compounds: cash flow now + multiple later", "You sell from strength, on your timing — or never", "Often the right answer when today's range disappoints"], cons: ["Requires real management change, not just intent", "Market windows open and close — don't wait forever", "Easy to drift without a dated plan & accountability"] }
       ];
 
       var QUIZ = [
         { key: "size", q: "Where is revenue today?", options: [
-          { label: "Under $1M", scores: { broker: 3, internal: 2 } },
-          { label: "$1M – $3M", scores: { broker: 3, pe: 1, strategic: 1 } },
-          { label: "$3M – $10M", scores: { pe: 3, broker: 1, banker: 1, strategic: 1 } },
-          { label: "$10M+", scores: { banker: 3, pe: 2 } } ] },
+          { label: "Under $1M", scores: { broker: 3, sba: 3, mbo: 1, family: 1, liquidation: 1 } },
+          { label: "$1M – $3M", scores: { broker: 3, sba: 2, pe: 1, bolton: 2, strategic: 1, search: 2 } },
+          { label: "$3M – $10M", scores: { pe: 3, bolton: 2, broker: 1, banker: 1, auction: 2, strategic: 1, recap: 1 } },
+          { label: "$10M+", scores: { banker: 3, auction: 3, pe: 2, recap: 1 } } ] },
         { key: "timeline", q: "When do you want to be out?", options: [
-          { label: "ASAP — under 6 months", scores: { pe: 2, strategic: 2, broker: 1 } },
-          { label: "6–18 months", scores: { broker: 2, pe: 2, banker: 1 } },
-          { label: "2–3 years — I can prep", scores: { banker: 2, internal: 2, pe: 1 } },
-          { label: "Just exploring", scores: { internal: 1, banker: 1, broker: 1 } } ] },
+          { label: "ASAP — under 6 months", scores: { pe: 2, bolton: 2, strategic: 2, broker: 1, liquidation: 1 } },
+          { label: "6–18 months", scores: { broker: 2, pe: 2, banker: 1, auction: 2, sba: 1 } },
+          { label: "2–3 years — I can prep", scores: { banker: 2, auction: 1, esop: 2, mbo: 2, hold: 3, family: 1 } },
+          { label: "Just exploring", scores: { hold: 3, esop: 1, banker: 1, broker: 1 } } ] },
         { key: "after", q: "After the sale, you want to…", options: [
-          { label: "Be done — clean exit", scores: { broker: 3, strategic: 2 } },
-          { label: "Stay 6–24 months to transition", scores: { pe: 2, broker: 1, banker: 1 } },
-          { label: "Roll equity & keep growing it", scores: { pe: 4 } },
-          { label: "Slowly hand it to my GM / family", scores: { internal: 4 } } ] },
+          { label: "Be done — clean exit", scores: { broker: 3, strategic: 2, sba: 2, auction: 1 } },
+          { label: "Stay 6–24 months to transition", scores: { pe: 2, bolton: 2, broker: 1, banker: 1, sba: 1 } },
+          { label: "Roll equity & keep growing it", scores: { pe: 4, recap: 4, bolton: 1 } },
+          { label: "Slowly hand it to my GM / family", scores: { mbo: 4, family: 4, esop: 2 } } ] },
         { key: "priority", q: "What matters most?", options: [
-          { label: "Highest possible price", scores: { banker: 3, pe: 2 } },
-          { label: "Certainty & speed of closing", scores: { pe: 3, strategic: 2 } },
-          { label: "My team & name are protected", scores: { internal: 3, pe: 1 } },
-          { label: "Lowest fees & simplest process", scores: { pe: 2, strategic: 1, internal: 1 } } ] },
+          { label: "Highest possible price", scores: { banker: 3, auction: 3, pe: 2 } },
+          { label: "Certainty & speed of closing", scores: { pe: 3, bolton: 2, strategic: 2 } },
+          { label: "My team & name are protected", scores: { esop: 3, mbo: 3, family: 3, search: 2, pe: 1 } },
+          { label: "Lowest fees & simplest process", scores: { pe: 2, strategic: 1, mbo: 1, sba: 1, search: 1 } } ] },
         { key: "secrecy", q: "How sensitive is confidentiality?", options: [
-          { label: "Critical — staff/customers can't know", scores: { banker: 2, pe: 2, internal: 2 } },
-          { label: "Important, but manageable", scores: { broker: 1, pe: 1, banker: 1 } },
-          { label: "Not a big issue", scores: { broker: 2, strategic: 1 } } ] },
+          { label: "Critical — staff/customers can't know", scores: { banker: 2, auction: 2, pe: 2, mbo: 2, esop: 1 } },
+          { label: "Important, but manageable", scores: { broker: 1, pe: 1, banker: 1, sba: 1 } },
+          { label: "Not a big issue", scores: { broker: 2, strategic: 1, auction: 1 } } ] },
         { key: "help", q: "How much process help do you want?", options: [
-          { label: "Run it all for me", scores: { broker: 3, banker: 3 } },
-          { label: "Advise & negotiate, I'll do legwork", scores: { banker: 2, broker: 1 } },
-          { label: "Just open doors, I'll negotiate", scores: { pe: 2, strategic: 2 } },
-          { label: "Keep it in-house", scores: { internal: 3 } } ] }
+          { label: "Run it all for me", scores: { broker: 3, banker: 3, auction: 2 } },
+          { label: "Advise & negotiate, I'll do legwork", scores: { banker: 2, broker: 1, auction: 1 } },
+          { label: "Just open doors, I'll negotiate", scores: { pe: 2, bolton: 1, strategic: 2, search: 1 } },
+          { label: "Keep it in-house", scores: { mbo: 3, family: 2, hold: 2, esop: 1 } } ] }
       ];
 
       var BANDS = [
-        ["SDE under $250k", "2.8× – 4×", "Usually broker / individual buyer, SBA loan, owner transition is critical"],
-        ["EBITDA $250k – $500k", "3.5× – 5×", "Broker + local PE add-ons compete here"],
-        ["EBITDA $500k – $1M", "4.5× – 6×", "PE platforms get serious if agreements & team are strong"],
-        ["EBITDA $1M – $2M", "5.5× – 7×", "Competitive tension becomes possible"],
-        ["EBITDA $2M+", "6.5× – 8.5×+", "Banker-run process, rollover & platform value in play"]
+        ["EBITDA under $1M", "3.0\u00d7 \u2013 4.5\u00d7 EBITDA", "Anchored to Axial closed deals: closed median \u2248 3.9\u00d7; a third of sub-$1M deals closed below 3\u00d7"],
+        ["SDE \u2014 owner-operated shops", "2.0\u00d7 \u2013 3.5\u00d7 SDE", "Small shops price on SDE, not EBITDA. BizBuySell HVAC median \u2248 2.58\u00d7 SDE (2021\u201325) sits inside this range"],
+        ["EBITDA $1M \u2013 $3M", "4.0\u00d7 \u2013 6.0\u00d7 EBITDA", "GF Data / Axial anchor. Commercial HVAC in this tier can reach 4.5\u20136.5\u00d7"],
+        ["EBITDA $3M \u2013 $5M", "5.5\u00d7 \u2013 8.0\u00d7 EBITDA", "Inside the blended 5.5\u20138.0\u00d7 GF Data / Axial band; one Axial HVAC comp at $3.48M EBITDA closed at 7.64\u00d7"],
+        ["EBITDA $5M \u2013 $10M", "\u2248 7.0\u00d7 central (5.5\u00d7 \u2013 8.0\u00d7 range)", "GF Data / Axial central value \u2248 7\u00d7; premium platform-quality deals have closed at 7.5\u20139.5\u00d7"],
+        ["EBITDA $10M+", "7.0\u00d7 \u2013 10.5\u00d7 typical", "GF Data / Axial ($10\u201325M). Disclosed mega-deals print higher and skew published averages \u2014 don't anchor a private sale on headlines"]
       ];
 
       var BOOLS = [
@@ -587,7 +1074,58 @@
         { key: "monthly_financials", label: "Monthly financial close", hint: "P&L closed monthly, not just at tax time." }
       ];
 
+      /* AI levers: jobs() returns recovered jobs/yr at slider value v.
+         rev = jobs * ticket; ebitda = rev * margin (incremental). Value = ebitda * your multiple. */
+      var LEVERS = [
+        { id: "calls", name: "Never miss a call \u2014 AI answering, 24/7", shared: true,
+          stat: "Vendor-labelled benchmarks: 27% of calls to home-service businesses go unanswered (Invoca; vendor-reported range runs up to a 62% upper bound). A missed HVAC call is worth $800\u2013$1,200, 85% of callers who don't reach someone never call back, and 42% of service calls arrive outside 9\u20135 \u2014 when nobody is in the office.",
+          sliderLabel: "Inbound calls per week (the 27% default miss rate is applied in the math)", min: 0, max: 60, step: 1, def: 15, unit: "/wk",
+          ticket: 650, bookRate: 0.78,
+          jobs: function (v) { return v * 52 * 0.27 * 0.78 * 0.40; },
+          assump: "Math, step by step: inbound calls/wk \u00d7 52 \u00d7 27% missed (Invoca default, vendor-labelled) \u00d7 78% booking intent (Podium 2024, vendor-labelled) \u00d7 40% recovery \u2014 the app default, applied explicitly and deliberately below vendor claims of 40\u201370%. At 15 calls/wk that's \u2248 66 recovered jobs a year, at a $650 modelled ticket (below the $800\u2013$1,200 per-missed-call value range) and your incremental contribution margin (default 15%)." },
+        { id: "speed", name: "Answer every lead in under 5 minutes \u2014 email, web & social", shared: true,
+          stat: "A lead contacted within 5 minutes is far more likely to qualify than one contacted at 30 minutes (Oldroyd / MIT study, 2011), and 78% of customers buy from the first company to respond (vendor-labelled). Unchecked inboxes are the quiet version of a missed call.",
+          sliderLabel: "Web / email / social leads per week that wait hours (or forever) today", min: 0, max: 20, step: 1, def: 6, unit: "/wk",
+          ticket: 650, bookRate: 0.15,
+          jobs: function (v) { return v * 52 * 0.15; },
+          assump: "Conservative +15-point booking lift on leads answered in minutes by AI follow-up (text + email), $650 average ticket, at your incremental contribution margin (default 15%). Shares the lost-demand pool with the call and review levers \u2014 see the cap note above." },
+        { id: "estimates", name: "Work the unsold-estimate file \u2014 automatically",
+          stat: "Most shops carry months of quoted-but-unsold replacements that nobody follows up. Those homeowners already raised their hand, got a price, and will buy from whoever asks again at the right moment.",
+          sliderLabel: "Unsold estimates sitting open per month", min: 0, max: 30, step: 1, def: 8, unit: "/mo",
+          ticket: 9000, bookRate: 0.12,
+          jobs: function (v) { return v * 12 * 0.12; },
+          assump: "Assumes systematic AI follow-up (seasonal check-ins, price-hold notices) closes 12% of the file, $9,000 average replacement ticket, at your incremental contribution margin (default 15%)." },
+        { id: "reviews", name: "Review engine \u2014 turn finished jobs into inbound calls", shared: true,
+          stat: "Buyers pay for a brand that generates its own leads: 57% of consumers will only use a business with 4+ stars (BrightLocal). A steady flow of recent Google reviews is the cheapest call volume in the trade \u2014 and most shops ask rarely, if ever.",
+          sliderLabel: "Extra inbound calls per month a stronger review profile brings", min: 0, max: 30, step: 1, def: 5, unit: "/mo",
+          ticket: 650, bookRate: 0.78,
+          jobs: function (v) { return v * 12 * 0.78; },
+          assump: "AI asks every happy customer at the right moment and routes unhappy ones to you privately first. Extra calls convert at the 78% booking-intent factor (Podium 2024, vendor-labelled), $650 ticket, at your incremental contribution margin (default 15%). Shares the lost-demand pool \u2014 see the cap note above." },
+        { id: "dispatch", name: "Tighter dispatch \u2014 confirmations, reminders & routing",
+          stat: "No-shows, forgotten appointments, and windshield time burn the scarcest asset you own: tech hours. AI confirmations and day-before reminders hand completed jobs back without hiring.",
+          sliderLabel: "Extra completed jobs per week from fewer no-shows & tighter routes", min: 0, max: 10, step: 1, def: 2, unit: "/wk",
+          ticket: 650, bookRate: 1,
+          jobs: function (v) { return v * 52; },
+          assump: "$650 average ticket at your incremental contribution margin (default 15%). Even 2 extra jobs/week is 100+ jobs a year." },
+        { id: "agreements", name: "Reactivate dormant customers into maintenance agreements",
+          stat: "Your old customer list is a buyer's favorite asset \u2014 if it's alive. Agreements are the recurring revenue that lifts multiples, and dormant customers reactivate at a fraction of new-lead cost.",
+          sliderLabel: "Dormant customers reactivated per month (AI outreach to your own list)", min: 0, max: 40, step: 1, def: 10, unit: "/mo",
+          ticket: 540, bookRate: 1,
+          jobs: function (v) { return v * 12; },
+          assump: "Each reactivation \u2248 $540/yr (agreement + expected service revenue) at your incremental contribution margin (default 15%) \u2014 plus a second-order effect this model doesn't count: more recurring revenue supports a higher multiple." }
+      ];
+
+      var ROLODEX = [
+        { name: "M&A Attorney", desc: "LOI, purchase agreement, seller-note and rollover terms. HVAC-experienced counsel catches license-transfer and permit-liability traps generalists miss.", key: "M&A attorney" },
+        { name: "CPA / Quality of Earnings", desc: "Normalization, add-backs defense, sell-side QoE, and the asset-vs-stock tax modeling that swings what you keep by 15–30%.", key: "CPA / QoE provider" },
+        { name: "Business Broker", desc: "For sub-$5M sales to individual and SBA buyers: valuation, blind listing, buyer screening, and lender process management.", key: "business broker" },
+        { name: "M&A Advisor", desc: "For $1.5M+ EBITDA: runs the competitive process / auction, builds the buyer list, and negotiates against multiple live bids.", key: "M&A advisor" },
+        { name: "Private Equity Platforms", desc: "Direct introductions to residential-services platforms and add-on buyers active in your region — with your numbers packaged the way they diligence.", key: "private equity introduction" },
+        { name: "SBA Lender", desc: "The financing behind most small-shop sales. A lender who knows HVAC underwrites faster and kills fewer deals in month five.", key: "SBA lender" }
+      ];
+
       var NUM_FIELDS = ["annual_revenue", "ebitda", "owner_cash_flow", "years_in_business", "growth_rate_pct", "recurring_pct", "residential_pct", "maintenance_agreements", "tech_count", "total_employees", "owner_hours_per_week", "top_customer_pct"];
+      var LEAD_EMAIL = "sergeosaulenko@gmail.com";
 
       /* ---------------- Session-only state ---------------- */
       var profile = {
@@ -600,34 +1138,45 @@
       var tasks = DEFAULT_TASKS.map(function (t) { return { category: t.category, title: t.title, description: t.description, impact: t.impact, status: "not_started", custom: false }; });
       var docs = DEFAULT_DOCS.map(function (d) { return { category: d.category, name: d.name, why: d.why, status: "missing" }; });
       var quizAnswers = {};
+      var leverState = {};
+      LEVERS.forEach(function (l, i) { leverState[l.id] = { on: i === 0, value: l.def }; });
+      var aiChart = null;
+      var marginPct = 15; /* incremental contribution margin, default 15%, slider 10-25% */
+      var AI_COST_MONTHLY = 297; /* full-automation plan, register range $97-$297/mo */
+      var SHARED_POOL_IDS = ["calls", "speed", "reviews"];
 
-      /* ---------------- Scoring (identical logic to the full workspace) ---------------- */
+      /* ---------------- Scoring ---------------- */
       function money(n) {
         if (!n) return "$0";
         if (n >= 1000000) return "$" + (n / 1000000).toFixed(n >= 10000000 ? 1 : 2) + "M";
         if (n >= 1000) return "$" + Math.round(n / 1000) + "k";
-        return "$" + n;
+        return "$" + Math.round(n);
       }
       function moneyFull(n) {
-        return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+        return Math.round(n).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
       }
       function multipleRange(p) {
-        var earnings = p.ebitda || p.owner_cash_flow;
-        var low = 3, high = 4.5;
-        if (earnings >= 2000000) { low = 6.5; high = 8.5; }
-        else if (earnings >= 1000000) { low = 5.5; high = 7; }
-        else if (earnings >= 500000) { low = 4.5; high = 6; }
-        else if (earnings >= 250000) { low = 3.5; high = 5; }
-        else if (earnings > 0) { low = 2.8; high = 4; }
+        var useEbitda = p.ebitda > 0;
+        var earnings = useEbitda ? p.ebitda : p.owner_cash_flow;
+        var low = 3.0, high = 4.5;
+        if (!useEbitda && earnings > 0) {
+          if (earnings >= 500000) { low = 2.5; high = 3.5; }
+          else if (earnings >= 250000) { low = 2.2; high = 3.2; }
+          else { low = 2.0; high = 3.0; }
+        } else if (earnings >= 10000000) { low = 7.0; high = 10.5; }
+        else if (earnings >= 5000000) { low = 5.5; high = 8.0; }
+        else if (earnings >= 3000000) { low = 5.5; high = 8.0; }
+        else if (earnings >= 1000000) { low = 4.0; high = 6.0; }
+        else if (earnings > 0) { low = 3.0; high = 4.5; }
         var adj = 0;
         if (p.recurring_pct >= 30) adj += 0.5; else if (p.recurring_pct >= 20) adj += 0.25;
         if (p.growth_rate_pct >= 10) adj += 0.3;
         if (p.has_gm) adj += 0.25;
         if (p.owner_hours_per_week >= 40) adj -= 0.5;
         if (p.top_customer_pct >= 20) adj -= 0.5;
-        low = Math.max(2, Math.round((low + adj) * 10) / 10);
+        low = Math.max(1.8, Math.round((low + adj) * 10) / 10);
         high = Math.max(low + 0.5, Math.round((high + adj) * 10) / 10);
-        return { low: low, high: high, earnings: earnings };
+        return { low: low, high: high, earnings: earnings, basis: useEbitda ? "EBITDA" : "SDE" };
       }
       function pillars(p) {
         var finTasks = tasks.filter(function (t) { return t.category === "Financials"; });
@@ -655,12 +1204,13 @@
         return { list: list, overall: overall };
       }
       function quizResult() {
-        var scores = { broker: 0, pe: 0, banker: 0, strategic: 0, internal: 0 };
+        var scores = {};
+        ROUTES.forEach(function (r) { scores[r.id] = 0; });
         QUIZ.forEach(function (q) {
           var ai = quizAnswers[q.key];
           if (ai !== undefined) {
             var opt = q.options[ai];
-            if (opt) Object.keys(opt.scores).forEach(function (k) { scores[k] += opt.scores[k]; });
+            if (opt) Object.keys(opt.scores).forEach(function (k) { if (scores[k] !== undefined) scores[k] += opt.scores[k]; });
           }
         });
         var sorted = Object.keys(scores).map(function (k) { return [k, scores[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
@@ -673,30 +1223,104 @@
       }
       function el(id) { return document.getElementById(id); }
 
-      /* ---------------- Tabs ---------------- */
-      var TABS = [
-        { id: "overview", label: "Overview" },
-        { id: "valuation", label: "Valuation" },
-        { id: "readiness", label: "Checklist" },
-        { id: "routes", label: "Exit Routes" },
-        { id: "vault", label: "Doc Vault" }
-      ];
-      var currentTab = "overview";
-      function renderTabs() {
-        var done = tasks.filter(function (t) { return t.status === "done"; }).length;
-        el("tabNav").innerHTML = TABS.map(function (t) {
-          var label = t.id === "readiness" ? "Checklist " + done + "/" + tasks.length : t.label;
-          return '<button type="button" class="tab-btn" data-tab="' + t.id + '"' + (currentTab === t.id ? ' aria-current="page"' : "") + ">" + esc(label) + "</button>";
-        }).join("");
-        Array.prototype.forEach.call(el("tabNav").querySelectorAll("[data-tab]"), function (b) {
-          b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); });
+      /* ---------------- AI simulator math ---------------- */
+      function leverCalc(l) {
+        var st = leverState[l.id];
+        if (!st.on) return { jobs: 0, rev: 0, ebitda: 0, valueLow: 0, valueHigh: 0 };
+        var jobs = l.jobs(st.value);
+        var rev = jobs * l.ticket;
+        var ebitda = rev * (marginPct / 100);
+        var mult = multipleRange(profile);
+        var mLow = mult.earnings > 0 ? mult.low : 3.0;
+        var mHigh = mult.earnings > 0 ? mult.high : 4.5;
+        return { jobs: jobs, rev: rev, ebitda: ebitda, valueLow: ebitda * mLow, valueHigh: ebitda * mHigh };
+      }
+      /* Shared-pool cap: calls + speed + reviews draw on ONE lost-demand pool.
+         Combined gain is capped — largest counts in full, second at 1/2, third at 1/4 —
+         and every shared contribution is scaled by the same factor, so the same
+         lost job is never counted twice. */
+      function aiTotals() {
+        var t = { jobs: 0, rev: 0, ebitda: 0, valueLow: 0, valueHigh: 0, active: 0,
+                  grossEbitda: 0, aiCost: 0, netEbitda: 0, netValueLow: 0, netValueHigh: 0,
+                  sharedRawJobs: 0, sharedCappedJobs: 0, capApplied: false };
+        var calcs = {};
+        LEVERS.forEach(function (l) { calcs[l.id] = leverCalc(l); if (leverState[l.id].on) t.active++; });
+        var sharedJobs = SHARED_POOL_IDS.map(function (id) { return calcs[id] ? calcs[id].jobs : 0; })
+          .filter(function (j) { return j > 0; }).sort(function (a, b) { return b - a; });
+        var rawShared = sharedJobs.reduce(function (a, b) { return a + b; }, 0);
+        var cappedShared = 0;
+        sharedJobs.forEach(function (j, i) { cappedShared += j * (i === 0 ? 1 : i === 1 ? 0.5 : 0.25); });
+        var sharedScale = rawShared > 0 ? cappedShared / rawShared : 1;
+        t.sharedRawJobs = rawShared; t.sharedCappedJobs = cappedShared;
+        t.capApplied = sharedJobs.length > 1 && cappedShared < rawShared - 0.01;
+        LEVERS.forEach(function (l) {
+          var c = calcs[l.id];
+          var k = SHARED_POOL_IDS.indexOf(l.id) !== -1 ? sharedScale : 1;
+          t.jobs += c.jobs * k; t.rev += c.rev * k; t.ebitda += c.ebitda * k;
+          t.valueLow += c.valueLow * k; t.valueHigh += c.valueHigh * k;
         });
+        t.grossEbitda = t.ebitda;
+        t.aiCost = t.active > 0 ? AI_COST_MONTHLY * 12 : 0;
+        t.netEbitda = t.grossEbitda - t.aiCost;
+        var mult2 = multipleRange(profile);
+        var nmLow = mult2.earnings > 0 ? mult2.low : 3.0;
+        var nmHigh = mult2.earnings > 0 ? mult2.high : 4.5;
+        t.netValueLow = t.netEbitda * nmLow; t.netValueHigh = t.netEbitda * nmHigh;
+        return t;
+      }
+
+      /* ---------------- Journey navigation (one scrolling page) ---------------- */
+      var SECTIONS = [
+        { section: "section-snapshot", label: "Snapshot", step: 1 },
+        { section: "section-value", label: "Your Value", step: 2 },
+        { section: "section-ai", label: "Grow the Value", step: 3 },
+        { section: "section-routes", label: "Your Sale Path", step: 4 },
+        { section: "section-prep", label: "Prep", step: 5 },
+        { section: "section-help", label: "Get Help", step: 6 }
+      ];
+      var SECTION_MAP = {
+        overview: "section-snapshot", snapshot: "section-snapshot",
+        valuation: "section-value", value: "section-value",
+        ai: "section-ai",
+        routes: "section-routes",
+        readiness: "section-prep", checklist: "section-prep", vault: "section-prep", prep: "section-prep",
+        help: "section-help"
+      };
+      var currentSection = "section-snapshot";
+      function renderTabs() {
+        var done = tasks.filter(function (x) { return x.status === "done"; }).length;
+        var pc = el("prepCount");
+        if (pc) pc.textContent = done + "/" + tasks.length;
+        Array.prototype.forEach.call(document.querySelectorAll("[data-scroll]"), function (b) {
+          if (b.getAttribute("data-scroll") === currentSection) b.setAttribute("aria-current", "true");
+          else b.removeAttribute("aria-current");
+        });
+        var sp = el("stickyProgress");
+        if (sp) {
+          var cur = SECTIONS.filter(function (s) { return s.section === currentSection; })[0];
+          if (cur) sp.textContent = "Step " + cur.step + " of 6 \u2014 " + cur.label;
+        }
       }
       function setTab(id) {
-        currentTab = id;
-        TABS.forEach(function (t) { el("tab-" + t.id).hidden = t.id !== id; });
+        var target = SECTION_MAP[id] || id;
+        var node = el(target);
+        if (!node) return;
+        currentSection = target;
         renderTabs();
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        node.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      function initScrollSpy() {
+        Array.prototype.forEach.call(document.querySelectorAll("[data-scroll]"), function (b) {
+          b.addEventListener("click", function () { setTab(b.getAttribute("data-scroll")); });
+        });
+        if ("IntersectionObserver" in window) {
+          var obs = new IntersectionObserver(function (entries) {
+            entries.forEach(function (en) {
+              if (en.isIntersecting) { currentSection = en.target.id; renderTabs(); }
+            });
+          }, { rootMargin: "-25% 0px -60% 0px", threshold: 0 });
+          SECTIONS.forEach(function (s) { var n = el(s.section); if (n) obs.observe(n); });
+        }
       }
 
       /* ---------------- Rendering ---------------- */
@@ -707,6 +1331,7 @@
           ? profile.company_name + " — are you actually ready to sell?"
           : "Your HVAC company — are you actually ready to sell?";
         el("heroScore").textContent = pill.overall;
+        el("heroRing").style.setProperty("--p", pill.overall);
         el("heroScoreBar").style.width = pill.overall + "%";
         el("heroScoreNote").textContent = pill.overall >= 75
           ? "Buyer-ready range — focus on process & price."
@@ -716,7 +1341,7 @@
           el("heroValEmpty").hidden = true;
           el("heroValFull").hidden = false;
           el("heroValRange").textContent = money(mult.earnings * mult.low) + " – " + money(mult.earnings * mult.high);
-          el("heroValNote").textContent = moneyFull(mult.earnings) + " earnings × " + mult.low + "–" + mult.high + "× • Educational estimate, not an appraisal. See the Valuation tab for what moves it.";
+          el("heroValNote").textContent = moneyFull(mult.earnings) + " " + mult.basis + " × " + mult.low + "–" + mult.high + "× • Educational estimate, not an appraisal. See Valuation for what moves it.";
         } else {
           el("heroValEmpty").hidden = false;
           el("heroValFull").hidden = true;
@@ -740,7 +1365,7 @@
         if (mult.earnings > 0) {
           el("valStats").innerHTML =
             '<div class="stat-grid">' +
-            '<div class="stat"><p class="stat-label">Earnings base</p><p class="stat-big display">' + moneyFull(mult.earnings) + '</p><p class="stat-note">' + (profile.ebitda ? "Using your EBITDA" : "Using owner cash flow / SDE") + "</p></div>" +
+            '<div class="stat"><p class="stat-label">Earnings base — ' + mult.basis + '</p><p class="stat-big display">' + moneyFull(mult.earnings) + '</p><p class="stat-note">' + (mult.basis === "EBITDA" ? "Using your EBITDA — the managed-shop basis" : "Using owner cash flow / SDE — the owner-operated basis") + "</p></div>" +
             '<div class="stat"><p class="stat-label">Multiple range</p><p class="stat-big display">' + mult.low + "× – " + mult.high + '×</p><p class="stat-note">Adjusted for recurring %, growth, GM, owner hours &amp; concentration from your snapshot</p></div>' +
             '<div class="stat dark"><p class="stat-label">Indicative enterprise value</p><p class="stat-big display">' + money(mult.earnings * mult.low) + " – " + money(mult.earnings * mult.high) + '</p><p class="stat-note">Before debt, cash, working-capital adjustment, taxes &amp; fees</p></div>' +
             "</div>";
@@ -750,6 +1375,82 @@
             '<p class="lede">Go to Overview and add EBITDA or owner cash flow — your range calculates instantly.</p>' +
             '<button class="btn-navy" type="button" data-goto="overview">Add my numbers</button></div>';
           bindGoto();
+        }
+      }
+      function renderAI() {
+        var t = aiTotals();
+        var mult = multipleRange(profile);
+        var baseVal = mult.earnings > 0 ? (mult.earnings * mult.low + mult.earnings * mult.high) / 2 : 0;
+        el("aiSummary").innerHTML =
+          '<div class="stat"><p class="stat-label">Extra jobs / year (after pool cap)</p><p class="stat-big display">' + Math.round(t.jobs).toLocaleString() + '</p><p class="stat-note">From ' + t.active + ' of ' + LEVERS.length + ' levers switched on, at ' + marginPct + '% incremental contribution margin</p></div>' +
+          '<div class="stat"><p class="stat-label">Gross extra profit / year</p><p class="stat-big display">' + money(t.grossEbitda) + '</p><p class="stat-note">Extra revenue ' + money(t.rev) + ' × ' + marginPct + '% margin, before AI tool cost. Gross added sale price would be ' + (t.grossEbitda > 0 ? money(t.valueLow) + " – " + money(t.valueHigh) : "$0") + '</p></div>' +
+          '<div class="stat dark2"><p class="stat-label">Net extra profit / year — headline</p><p class="stat-big display">' + money(t.netEbitda) + '</p><p class="stat-note">Gross ' + money(t.grossEbitda) + ' minus AI tool cost ' + money(t.aiCost) + '/yr ($297/mo full plan; basic plans from $97/mo)</p></div>' +
+          '<div class="stat dark"><p class="stat-label">Added sale price — net</p><p class="stat-big display">' + (t.netEbitda > 0 ? money(t.netValueLow) + " – " + money(t.netValueHigh) : "$0") + '</p><p class="stat-note">Net profit × your ' + (mult.earnings > 0 ? mult.low + "–" + mult.high + "×" : "assumed 3.0–4.5×") + ' multiple' + (baseVal > 0 && t.netEbitda > 0 ? " • Value with levers on: ≈ " + money(baseVal + (t.netValueLow + t.netValueHigh) / 2) + " mid (current mid " + money(baseVal) + ")" : "") + "</p></div>";
+        var sd = el("stackingDetail");
+        if (sd) sd.textContent = t.capApplied
+          ? "Shared-pool cap applied: " + Math.round(t.sharedCappedJobs) + " jobs/yr counted from the call, speed-to-lead and review levers combined, instead of " + Math.round(t.sharedRawJobs) + " if they were simply added — the same lost job is never counted twice. Lever cards below show stand-alone figures before the cap, the margin, and AI tool cost."
+          : "Lever cards below show stand-alone gross figures before the shared-pool cap and AI tool cost; the headline totals above are net.";
+        el("leverList").innerHTML = LEVERS.map(function (l) {
+          var st = leverState[l.id];
+          var c = leverCalc(l);
+          return '<div class="lever' + (st.on ? "" : " off") + '">' +
+            '<div class="lever-top"><div><h3 class="display">' + esc(l.name) + '</h3><p class="lever-stat">' + esc(l.stat) + "</p></div>" +
+            '<label class="lever-toggle"><span>' + (st.on ? "ON" : "OFF") + '</span><input type="checkbox" class="toggle" data-lever-toggle="' + l.id + '"' + (st.on ? " checked" : "") + ' aria-label="Toggle ' + esc(l.name) + '" style="accent-color:var(--accent); width:22px; height:22px" /></label></div>' +
+            '<div class="lever-controls"><div><div class="lever-slider-label"><span>' + esc(l.sliderLabel) + '</span><output id="out-' + l.id + '">' + st.value + " " + esc(l.unit) + "</output></div>" +
+            '<input type="range" class="sim-range" min="' + l.min + '" max="' + l.max + '" step="' + l.step + '" value="' + st.value + '" data-lever-range="' + l.id + '" aria-label="' + esc(l.sliderLabel) + '" /></div>' +
+            '<div class="lever-out">' +
+            '<span class="lever-chip">≈ <strong>' + Math.round(c.jobs).toLocaleString() + '</strong> jobs/yr</span>' +
+            '<span class="lever-chip">+<strong>' + money(c.ebitda) + '</strong> profit/yr</span>' +
+            '<span class="lever-chip green">+<strong>' + money(c.valueLow) + " – " + money(c.valueHigh) + '</strong> sale price</span>' +
+            "</div></div>" +
+            '<p class="lever-assump">' + esc(l.assump) + "</p></div>";
+        }).join("");
+        Array.prototype.forEach.call(el("leverList").querySelectorAll("[data-lever-toggle]"), function (cb) {
+          cb.addEventListener("change", function () {
+            leverState[cb.getAttribute("data-lever-toggle")].on = cb.checked;
+            renderAI(); renderReport();
+          });
+        });
+        Array.prototype.forEach.call(el("leverList").querySelectorAll("[data-lever-range]"), function (r) {
+          r.addEventListener("input", function () {
+            var id = r.getAttribute("data-lever-range");
+            leverState[id].value = Number(r.value);
+            var l = LEVERS.filter(function (x) { return x.id === id; })[0];
+            var out = el("out-" + id);
+            if (out) out.textContent = r.value + " " + l.unit;
+            if (!leverState[id].on) { leverState[id].on = true; }
+            renderAI(); renderReport();
+          });
+        });
+        renderAIChart();
+      }
+      function renderAIChart() {
+        var chartEl = el("aiChart");
+        if (!chartEl) return;
+        var mult = multipleRange(profile);
+        var t = aiTotals();
+        var base = mult.earnings;
+        var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (window.echarts) {
+          if (!aiChart) aiChart = window.echarts.init(chartEl);
+          aiChart.setOption({
+            grid: { left: 8, right: 16, top: 36, bottom: 8, containLabel: true },
+            legend: { textStyle: { color: dark ? "#eef3f7" : "#122a3f" } },
+            tooltip: { trigger: "axis", valueFormatter: function (v) { return moneyFull(v || 0); } },
+            xAxis: { type: "category", data: ["Annual earnings today", "Earnings with AI levers on"], axisLabel: { color: dark ? "#9db0c0" : "#54687c", fontSize: 12 } },
+            yAxis: { type: "value", axisLabel: { color: dark ? "#9db0c0" : "#54687c", formatter: function (v) { return money(v); } }, splitLine: { lineStyle: { color: dark ? "#2a3f52" : "#d3dde6" } } },
+            series: [
+              { name: "Current earnings (" + mult.basis + ")", type: "bar", stack: "a", data: [base, base], itemStyle: { color: "#122a3f", borderRadius: [6, 6, 0, 0] }, barWidth: "42%" },
+              { name: "Added by AI levers (net of AI cost)", type: "bar", stack: "a", data: [0, Math.round(t.netEbitda)], itemStyle: { color: "#d96c27", borderRadius: [6, 6, 0, 0] } }
+            ]
+          });
+          aiChart.resize();
+        } else {
+          var max = Math.max(1, base + t.netEbitda);
+          chartEl.style.height = "auto";
+          chartEl.innerHTML = '<div class="chart-fallback">' +
+            '<div class="cf-row"><span class="cf-name">Earnings today</span><div class="cf-track"><div style="width:' + Math.round(base / max * 100) + '%"></div></div><span class="cf-val">' + money(base) + "</span></div>" +
+            '<div class="cf-row"><span class="cf-name">With AI levers (net)</span><div class="cf-track"><div class="ai" style="width:' + Math.round((base + t.netEbitda) / max * 100) + '%"></div></div><span class="cf-val">' + money(base + t.netEbitda) + "</span></div></div>";
         }
       }
       function renderChecklist() {
@@ -823,7 +1524,7 @@
         Array.prototype.forEach.call(el("quizBody").querySelectorAll("[data-quiz]"), function (b) {
           b.addEventListener("click", function () {
             quizAnswers[b.getAttribute("data-quiz")] = Number(b.getAttribute("data-opt"));
-            renderQuiz();
+            renderQuiz(); renderReport();
           });
         });
         if (quizComplete()) {
@@ -843,7 +1544,9 @@
         var top = quizComplete() ? quizResult().top : null;
         el("routeCards").innerHTML = ROUTES.map(function (r) {
           return '<article class="route-card"><div class="route-head"><div><h3 class="display">' + esc(r.name) + '</h3><p class="route-tag">' + esc(r.tag) + "</p></div>" +
-            (top === r.id ? '<span class="fit-badge">YOUR BEST FIT</span>' : "") + "</div>" +
+            '<span style="display:flex; gap:6px; flex-wrap:wrap">' +
+            (r.method ? '<span class="method-badge">METHOD</span>' : "") +
+            (top === r.id ? '<span class="fit-badge">YOUR BEST FIT</span>' : "") + "</span></div>" +
             '<p class="route-best">' + esc(r.bestFor) + "</p>" +
             '<div class="route-facts">' +
             '<div class="fact"><p class="fact-label">Fees</p><p>' + esc(r.fees) + "</p></div>" +
@@ -868,10 +1571,73 @@
           btn.addEventListener("click", function () {
             var k = btn.getAttribute("data-bool");
             profile[k] = !profile[k];
-            renderBools();
-            renderHero(); renderPillars(); renderValuation();
+            renderBools(); refresh();
           });
         });
+      }
+      function renderRolodex() {
+        el("rolodexGrid").innerHTML = ROLODEX.map(function (r) {
+          return '<div class="help-card"><h3 class="display">' + esc(r.name) + "</h3><p>" + esc(r.desc) + '</p><button type="button" class="btn-intro" data-intro="' + esc(r.key) + '">Request introduction</button></div>';
+        }).join("");
+        Array.prototype.forEach.call(el("rolodexGrid").querySelectorAll("[data-intro]"), function (b) {
+          b.addEventListener("click", function () {
+            el("lead_interest").value = "An introduction (broker / PE / attorney / CPA)";
+            el("lead_msg").value = "I'd like an introduction to a " + b.getAttribute("data-intro") + ".";
+            setTab("help");
+            el("lead_name").focus();
+          });
+        });
+      }
+
+      /* ---------------- Report ---------------- */
+      function buildReport() {
+        var pill = pillars(profile);
+        var mult = multipleRange(profile);
+        var t = aiTotals();
+        var done = tasks.filter(function (x) { return x.status === "done"; }).length;
+        var open = tasks.filter(function (x) { return x.status !== "done"; });
+        var ready = docs.filter(function (d) { return d.status === "ready"; }).length;
+        var lines = [];
+        lines.push("HVAC ACQUISITION PREP — REPORT");
+        lines.push((profile.company_name || "Your HVAC company") + (profile.location ? " • " + profile.location : ""));
+        lines.push("");
+        lines.push("READINESS SCORE: " + pill.overall + "/100");
+        pill.list.forEach(function (p) { lines.push("  - " + p.label + ": " + p.score + " (" + p.hint + ")"); });
+        lines.push("");
+        if (mult.earnings > 0) {
+          lines.push("INDICATIVE VALUE: " + moneyFull(mult.earnings * mult.low) + " – " + moneyFull(mult.earnings * mult.high));
+          lines.push("  Basis: " + moneyFull(mult.earnings) + " " + mult.basis + " × " + mult.low + "–" + mult.high + "× (educational range, not an appraisal)");
+        } else {
+          lines.push("INDICATIVE VALUE: add EBITDA or SDE in the snapshot to calculate.");
+        }
+        lines.push("");
+        lines.push("KEY NUMBERS: Revenue " + moneyFull(profile.annual_revenue) + " • Recurring " + profile.recurring_pct + "% • " + profile.maintenance_agreements.toLocaleString() + " agreements • " + profile.tech_count + " techs • Owner " + profile.owner_hours_per_week + " hrs/wk • Top customer " + profile.top_customer_pct + "%");
+        lines.push("Timeline: " + profile.timeline + (profile.exit_goal ? " • Goal: " + profile.exit_goal : ""));
+        lines.push("");
+        lines.push("AI UPSIDE (levers switched on: " + t.active + ", incremental contribution margin " + marginPct + "%):");
+        lines.push("  ≈ " + Math.round(t.jobs).toLocaleString() + " extra jobs/yr (after the shared-pool cap: call, speed-to-lead and review levers share one lost-demand pool — largest in full, second at half, third at a quarter — so no job is counted twice)");
+        lines.push("  Gross: " + moneyFull(t.grossEbitda) + " extra profit/yr → " + moneyFull(t.valueLow) + " – " + moneyFull(t.valueHigh) + " added sale price (gross).");
+        lines.push("  Net (headline): " + moneyFull(t.netEbitda) + " extra profit/yr after AI tool cost of " + moneyFull(t.aiCost) + "/yr ($297/mo full plan; register range $97/mo basic – $297/mo full) → " + moneyFull(t.netValueLow) + " – " + moneyFull(t.netValueHigh) + " added sale price at your multiple.");
+        LEVERS.forEach(function (l) {
+          if (leverState[l.id].on) {
+            var c = leverCalc(l);
+            lines.push("  - " + l.name + ": ~" + Math.round(c.jobs) + " jobs/yr, +" + moneyFull(c.ebitda) + " profit");
+          }
+        });
+        lines.push("");
+        if (quizComplete()) lines.push("BEST-FIT EXIT PATH: " + routeById(quizResult().top).name);
+        else lines.push("BEST-FIT EXIT PATH: complete the 6-question Route Finder to score every path, including the liquidation floor.");
+        lines.push("");
+        lines.push("PREP CHECKLIST: " + done + "/" + tasks.length + " done. Next high-impact items:");
+        open.filter(function (x) { return x.impact === "High"; }).slice(0, 5).forEach(function (x) { lines.push("  - " + x.title); });
+        lines.push("DILIGENCE VAULT: " + ready + "/" + docs.length + " documents ready.");
+        lines.push("");
+        lines.push("Generated with HVAC Acquisition Prep by Selenko. Educational only — not a valuation or legal/tax advice.");
+        return lines.join("\n");
+      }
+      function renderReport() { el("reportBox").textContent = buildReport(); }
+      function mailtoWith(subject, body, to) {
+        return "mailto:" + (to || "") + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
       }
       function bindGoto() {
         Array.prototype.forEach.call(document.querySelectorAll("[data-goto]"), function (b) {
@@ -882,21 +1648,36 @@
       }
       function refresh() {
         renderHero(); renderPillars(); renderValuation();
-        renderChecklist(); renderVault(); renderTabs();
+        renderChecklist(); renderVault(); renderTabs(); renderReport();
+        renderAI();
       }
 
       /* ---------------- Form wiring ---------------- */
       NUM_FIELDS.forEach(function (key) {
         el("f_" + key).addEventListener("input", function (e) {
           profile[key] = Number(e.target.value) || 0;
-          renderHero(); renderPillars(); renderValuation();
+          renderHero(); renderPillars(); renderValuation(); renderReport();
+          renderAI();
         });
       });
-      el("f_company_name").addEventListener("input", function (e) { profile.company_name = e.target.value; renderHero(); });
-      el("f_location").addEventListener("input", function (e) { profile.location = e.target.value; });
-      el("f_exit_goal").addEventListener("input", function (e) { profile.exit_goal = e.target.value; });
-      el("f_timeline").addEventListener("change", function (e) { profile.timeline = e.target.value; });
+      el("f_company_name").addEventListener("input", function (e) { profile.company_name = e.target.value; renderHero(); renderReport(); });
+      el("f_location").addEventListener("input", function (e) { profile.location = e.target.value; renderReport(); });
+      el("f_exit_goal").addEventListener("input", function (e) { profile.exit_goal = e.target.value; renderReport(); });
+      el("f_timeline").addEventListener("change", function (e) { profile.timeline = e.target.value; renderReport(); });
       el("snapshotForm").addEventListener("submit", function (e) { e.preventDefault(); });
+      var fillBtn = el("fillSampleBtn");
+      if (fillBtn) fillBtn.addEventListener("click", function () {
+        var sample = { annual_revenue: 2400000, ebitda: 420000, growth_rate_pct: 8, recurring_pct: 28, residential_pct: 0, maintenance_agreements: 620, tech_count: 9, total_employees: 14, owner_hours_per_week: 45, top_customer_pct: 12, years_in_business: 0 };
+        Object.keys(sample).forEach(function (k) {
+          profile[k] = sample[k];
+          var inp = el("f_" + k);
+          if (inp) inp.value = sample[k] ? sample[k] : "";
+        });
+        profile.owner_cash_flow = 0;
+        var sde = el("f_owner_cash_flow"); if (sde) sde.value = "";
+        var dg = el("detailGroup"); if (dg) dg.open = true;
+        refresh();
+      });
 
       var titleInput = el("newTaskTitle");
       titleInput.addEventListener("input", function () { el("addTaskBtn").disabled = !titleInput.value.trim(); });
@@ -908,11 +1689,47 @@
         refresh();
       });
 
+      el("downloadReportBtn").addEventListener("click", function () {
+        var blob = new Blob([buildReport()], { type: "text/plain;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = (profile.company_name ? profile.company_name.replace(/[^a-z0-9]+/gi, "-") : "hvac") + "-acquisition-prep-report.txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      });
+      el("emailReportBtn").addEventListener("click", function () {
+        var to = el("lead_email").value.trim();
+        window.location.href = mailtoWith("My HVAC acquisition prep report", buildReport(), to);
+      });
+      el("leadForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var body = "Name: " + el("lead_name").value.trim() +
+          "\nEmail: " + el("lead_email").value.trim() +
+          "\nPhone: " + el("lead_phone").value.trim() +
+          "\nI want help with: " + el("lead_interest").value +
+          "\nNotes: " + el("lead_msg").value.trim() +
+          "\n\n--- My prep report ---\n" + buildReport();
+        window.location.href = mailtoWith("HVAC Acquisition Prep — help request", body, LEAD_EMAIL);
+      });
+      var marginRange = el("marginRange");
+      if (marginRange) marginRange.addEventListener("input", function () {
+        marginPct = Number(marginRange.value) || 15;
+        var mo = el("marginOut"); if (mo) mo.textContent = marginPct + "%";
+        renderAI(); renderReport();
+      });
+      window.addEventListener("resize", function () { if (aiChart) aiChart.resize(); });
+
       /* ---------------- Init ---------------- */
       renderTabs();
+      initScrollSpy();
       renderBools();
       renderBands();
       renderQuiz();
+      renderRolodex();
+      renderAI();
       bindGoto();
       refresh();
     })();
